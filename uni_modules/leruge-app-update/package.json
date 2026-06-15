@@ -1,0 +1,83 @@
+{
+  "id": "leruge-app-update",
+  "displayName": "App版本更新，安卓下载apk安装，苹果跳转appstore",
+  "version": "1.0.1",
+  "description": "App版本更新，安卓下载apk安装，苹果跳转appstore",
+  "keywords": [
+    "版本更新",
+    "app更新",
+    "App"
+],
+  "repository": "",
+  "engines": {
+    "HBuilderX": "^3.8.6"
+  },
+  "dcloudext": {
+    "type": "sdk-js",
+    "sale": {
+      "regular": {
+        "price": "0.90"
+      },
+      "sourcecode": {
+        "price": "0.00"
+      }
+    },
+    "contact": {
+      "qq": "305530751"
+    },
+    "declaration": {
+      "ads": "无",
+      "data": "插件不采集任何数据",
+      "permissions": "android.permission.INSTALL_PACKAGES和android.permission.REQUEST_INSTALL_PACKAGES"
+    },
+    "npmurl": ""
+  },
+  "uni_modules": {
+    "dependencies": [],
+    "encrypt": [],
+    "platforms": {
+      "cloud": {
+        "tcb": "y",
+        "aliyun": "y"
+      },
+      "client": {
+        "Vue": {
+          "vue2": "y",
+          "vue3": "y"
+        },
+        "App": {
+          "app-vue": "y",
+          "app-nvue": "y"
+        },
+        "H5-mobile": {
+          "Safari": "n",
+          "Android Browser": "n",
+          "微信浏览器(Android)": "n",
+          "QQ浏览器(Android)": "n"
+        },
+        "H5-pc": {
+          "Chrome": "n",
+          "IE": "n",
+          "Edge": "n",
+          "Firefox": "u",
+          "Safari": "n"
+        },
+        "小程序": {
+          "微信": "n",
+          "阿里": "n",
+          "百度": "n",
+          "字节跳动": "n",
+          "QQ": "n",
+          "钉钉": "n",
+          "快手": "n",
+          "飞书": "n",
+          "京东": "n"
+        },
+        "快应用": {
+          "华为": "n",
+          "联盟": "n"
+        }
+      }
+    }
+  }
+}

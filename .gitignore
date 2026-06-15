@@ -1,0 +1,8 @@
+# Build and Release Folders
+
+
+
+/unpackage
+/node_modules
+.idea
+.hbuilderx

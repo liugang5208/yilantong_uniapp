@@ -1,0 +1,6 @@
+{
+  "dependencies": {
+    "image-tools": "^1.4.0",
+    "uview-ui": "^1.8.8"
+  }
+}
