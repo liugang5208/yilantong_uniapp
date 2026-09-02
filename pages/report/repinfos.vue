@@ -1,342 +1,433 @@
 <template>
-	<view>
-		<view class="w_100 d_a_j"
-			style="background-color: #f8f8f8;padding-top: 20rpx;padding-bottom: 20rpx;position: relative"
-			@click="goManageTableLogo()">
+	<view class="modern-report-page">
 		
-			<view class="xzLogo" v-if="!logoInfo.img_site" style="margin-left: 20rpx">选择公司LOGO图片</view>
-			<image v-if="logoInfo.img_site" :src="logoInfo.img_site" style="width: 750rpx;height: 107rpx;" />
-			<image v-if="logoInfo.img_site" @click.stop="chaLogo()" src="/static/imgs/cha.png"
-				style="width: 60rpx;height: 60rpx;position: absolute;right: 20rpx;top: 20rpx;" />
+		<!-- 顶部：全局控制与比例调整胶囊舱 -->
+		<view class="hero-control-header amber-theme-box">
+			<view class="header-title-row">
+				<text class="main-label">全品统一调价比例</text>
+				<view class="stepper-box">
+					<view class="step-btn" @click="revCeil()">-</view>
+					<text :class="['step-value', repratio > 0 ? 'text-red' : repratio < 0 ? 'text-green' : 'text-gray']">
+						{{ repratio > 0 ? '+' + Number(repratio).toFixed(1) : Number(repratio).toFixed(1) }}%
+					</text>
+					<view class="step-btn" @click="addCeil()">+</view>
+				</view>
+			</view>
+
+			<!-- 发票通栏选择胶囊 -->
+			<view class="filter-capsule-row">
+				<view class="capsule-pill full-width-pill" @click="ticketNameShow = true">
+					<view class="pill-left-group">
+						<text class="pill-key">发票税率控制</text>
+					</view>
+					<view class="pill-right-group">
+						<text class="pill-val">{{ ticket_name || '选择发票类型' }}</text>
+						<u-icon name="arrow-right" size="18" color="#94a3b8"></u-icon>
+					</view>
+				</view>
+			</view>
 		</view>
-		<view class="ceilNumb">
-			全部商品统一比例调整:：
-			<span @click="revCeil()">-</span>
+
+		<!-- 中部：商品清单 -->
+		<view class="product-stream-section">
+			<view class="section-heading">
+				<text class="sec-title">报价商品清单</text>
+				<text class="sec-count">共 {{ list.length }} 项</text>
+			</view>
+
+			<view class="empty-state" v-if="list.length === 0">
+				<text>暂无商品，请在选品页添加或录入数据</text>
+			</view>
+
+			<!-- 商品卡片：现代化重构版 -->
+			<view :class="['floating-card-item', i % 2 === 0 ? 'card-even' : 'card-odd']" v-for="(item, i) in list" :key="item.id || i">
+				
+				<view class="sketch-row-1 card-header-bar-custom">
+					<view class="index-slot">
+						<text class="item-index-badge-custom">序号：{{ String(i + 1).padStart(3, '0') }}</text>
+					</view>
+					<view class="center-pill-slot">
+						<text :class="['mini-ratio-pill-top', Number(item.up || 0) > 0 ? 'pill-red-solid' : (Number(item.up || 0) < 0 ? 'pill-green-solid' : 'pill-gray-solid')]">
+							{{ Number(item.up || 0) > 0 ? '+' + Number(item.up).toFixed(1) + '%' : (Number(item.up || 0) < 0 ? Number(item.up).toFixed(1) + '%' : '+0.0%') }}
+						</text>
+					</view>
+					<view class="right-action-slot">
+						<!-- 文字显示修正：将主页卡片上的“条件 / 修改”统一规范修正为【调价 / 修改】 -->
+						<view class="batch-adjust-btn-custom-subtle" @click="openItemPopup(item, i)">
+							<text class="adjust-txt-custom">调价 / 修改</text>
+							<u-icon name="arrow-right" size="12" color="#64748b"></u-icon>
+						</view>
+						<text class="del-icon-btn" @click="quickDelete(item, i)">×</text>
+					</view>
+				</view>
+
+				<!-- 第二行：商品名称 -->
+				<view class="card-title-section-inline" @click="openDetailModalConditionally('商品名称全称', item.name || item.title || item.goods_name, $event)">
+					<text class="card-title-header-label">商品名称：</text>
+					<text class="card-goods-name ellipsis-text card-goods-name-styled">
+						{{ item.name || item.title || item.goods_name || '暂无商品名称（接口未对接）' }}
+					</text>
+				</view>
+
+				<!-- 第三行：产品参数详情区 -->
+				<view class="card-attr-grid">
+					<view class="attr-row-flex">
+						<view class="attr-col-item" @click="openDetailModalConditionally('产品型号全称', item.attr2, $event)">
+							<text class="attr-label" style="margin-right: 6px;">产品型号：</text>
+							<text class="attr-val ellipsis-text text-blue-bright">{{ item.attr2 || '-' }}</text>
+						</view>
+						<view class="attr-col-item" @click="openDetailModalConditionally('电压等级全称', item.attr1, $event)">
+							<text class="attr-label">电压等级：</text>
+							<text class="attr-val ellipsis-text text-blue-bright">{{ item.attr1 || '-' }}</text>
+						</view>
+					</view>
+					<view class="attr-row-item-full" @click="openDetailModalConditionally('产品规格全称', item.attr3, $event)">
+						<text class="attr-label">产品规格：</text>
+						<text class="attr-val ellipsis-text text-blue-bright">{{ item.attr3 || '-' }}</text>
+					</view>
+				</view>
+
+				<!-- 第四行：压轴财务/数量结算区 -->
+				<view class="card-financial-dock">
+					<view class="fin-item">
+						<text class="fin-label">数量：</text>
+						<text class="fin-num-bold">{{ item.nums || 0 }}</text>
+					</view>
+					<view class="fin-item">
+						<text class="fin-label">单价：</text>
+						<text :class="['fin-price-unit', Number(item.up || 0) > 0 ? 'text-red' : (Number(item.up || 0) < 0 ? 'text-green' : '')]">
+							¥{{ item.change_price !== undefined ? item.change_price : (item.price || 0) }}
+						</text>
+					</view>
+					<view class="fin-item subtotal-alignment">
+						<text class="fin-label">小计：</text>
+						<text class="fin-subtotal-red">¥{{ Number(item.total || 0).toFixed(2) }}</text>
+					</view>
+				</view>
+
+			</view>
+		</view>
+
+		<!-- 商务条款及表单填写区域 -->
+		<view class="floating-section-card">
+			<view class="form-group-title">商务与履约条款</view>
+
+			<view class="modern-form-item clickable-item" @click="openCustomSelector('check_type')">
+				<text class="form-label">付款方式：</text>
+				<view class="picker-value-box">
+					<text class="val-text">{{ check_type || '选择付款方式' }}</text>
+					<u-icon name="arrow-right" size="18" color="#94a3b8"></u-icon>
+				</view>
+			</view>
+
+			<view class="modern-form-item clickable-item" @click="openCustomSelector('trans_type')">
+				<text class="form-label">运输方式：</text>
+				<view class="picker-value-box">
+					<text class="val-text">{{ trans_type || '选择运输方式' }}</text>
+					<u-icon name="arrow-right" size="18" color="#94a3b8"></u-icon>
+				</view>
+			</view>
+
+			<view class="modern-form-item clickable-item" @click="openCustomSelector('fees_out')">
+				<text class="form-label">运输费用：</text>
+				<view class="picker-value-box">
+					<text class="val-text">{{ fees_out || '选择运费负担' }}</text>
+					<u-icon name="arrow-right" size="18" color="#94a3b8"></u-icon>
+				</view>
+			</view>
+
+			<view class="modern-form-item clickable-item" @click="openCustomSelector('pack_recyle')">
+				<text class="form-label">包装选项：</text>
+				<view class="picker-value-box">
+					<text class="val-text">{{ pack_recyle || '选择包装要求' }}</text>
+					<u-icon name="arrow-right" size="18" color="#94a3b8"></u-icon>
+				</view>
+			</view>
+		</view>
+
+		<!-- 基础档案表单输入群 -->
+		<view class="floating-section-card">
+			<view class="form-group-title header-row-flex">
+				<text>抬头与人员档案</text>
+				<!-- 修复：解耦报价单位与询价单位的快速选择按钮，提供独立的主题视觉区分 -->
+				<div class="template-header-actions">
+					<div class="template-badge-btn amber-btn" @click="openRepCompModal('rep')">选择报价单位</div>
+					<div class="template-badge-btn blue-btn" @click="openRepCompModal('question')">选择询价单位</div>
+				</div>
+			</view>
+
+			<view class="modern-form-item">
+				<text class="form-label">报价单位：</text>
+				<input @input="inChange($event,'rep_comp')" v-model="rep_comp" class="modern-input" placeholder-class="input-placeholder-light" placeholder="请输入公司名称" />
+			</view>
+
+			<view class="modern-form-item">
+				<text class="form-label">询价单位：</text>
+				<input @input="inChange($event,'question_comp')" v-model="question_comp" class="modern-input" placeholder-class="input-placeholder-light" placeholder="请输入公司名称" />
+			</view>
 			
-			<span  :class="repratio>0 ? 'red' : repratio<0?'green':repratio==0?'black':''"
-				class="value">{{repratio }}%</span>
-			<span @click="addCeil()">+</span>
+			<view class="modern-form-item">
+				<text class="form-label">项目名称：</text>
+				<input @input="inChange($event,'project_comp')" v-model="project_comp" class="modern-input" placeholder-class="input-placeholder-light" placeholder="请输入项目名称" />
+			</view>
+
+			<view class="modern-form-item">
+				<text class="form-label">报价人员：</text>
+				<input @input="inChange($event,'rep_user')" v-model="rep_user" class="modern-input" placeholder-class="input-placeholder-light" placeholder="请输入报价人员" />
+			</view>
+
+			<view class="modern-form-item">
+				<text class="form-label">手机号码：</text>
+				<input @input="inChange($event,'rep_phone')" v-model="rep_phone" class="modern-input" placeholder-class="input-placeholder-light" placeholder="请输入手机号码" />
+			</view>
 		</view>
 
-		<view class="goods">
-			<view class="goods_line">
-				<view class="goods_line_item title mrleft" style="flex-grow: 1;">
-					<view @click="transBidsShow=true"
-						style="display: flex;align-items: center;justify-content: center;width: 100%;position: relative;height: 100%">
-						<view style="font-size: 20rpx">产品标准:</view>
-						<view style="font-size: 20rpx;color: blue;margin-left: 20rpx;">{{trans_bids}}</view>
-						<view style="margin-left: 20rpx;">
-							<u-icon v-if="!transBidsShow" name="arrow-down-fill" color="#606266" :size="22">
-							</u-icon>
-							<u-icon v-if="transBidsShow" name="arrow-up-fill" color="#606266" :size="22">
-							</u-icon>
-						</view>
+		<!-- 备注信息卡片 -->
+		<view class="floating-section-card compact-remark-card">
+			<view class="form-group-title header-row-flex">
+				<text>备注与说明</text>
+				<div class="template-header-actions">
+					<div class="template-badge-btn" @click="openQuickTemplateModal">选择与管理模板</div>
+				</div>
+			</view>
 
+			<view class="textarea-box">
+				<textarea @input="inChange($event,'tags')" class="modern-textarea auto-grow-textarea" placeholder-class="input-placeholder-light" placeholder="请输入补充备注条款..." v-model="tags" auto-height></textarea>
+			</view>
+		</view>
+
+		<view class="bottom-spacer"></view>
+
+		<!-- 底部高定悬浮结算舱 -->
+		<view class="floating-checkout-dock">
+			<view class="dock-summary-info">
+				<view class="sum-row-top">
+					<text class="sum-item"><text class="dock-title-black">条数：</text><text class="dock-val-red">{{ list.length }}</text></text>
+					<text class="sum-item"><text class="dock-title-black">总量：</text><text class="dock-val-red">{{ count }}</text></text>
+					<text :class="['tax-flag-badge', ticket === 2 ? 'badge-special' : (ticket === 1 ? 'badge-normal' : 'badge-none')]">{{ ticket_name }}</text>
+				</view>
+				<view class="sum-row-bottom">
+					<text class="total-money-label"><text class="dock-title-black">总计：</text><text class="money-num-red">¥{{ total }}</text></text>
+				</view>
+				<view class="sum-row-words">
+					<text class="chinese-words"><text class="dock-title-black">大写：</text><text class="dock-content-red">{{ total_n }}</text></text>
+				</view>
+			</view>
+
+			<view class="dock-actions-row">
+				<button class="btn-clear" @click="clearall()">清空全部</button>
+				<button class="btn-submit" @click="apply()">立即生成报价单</button>
+			</view>
+			<view class="dock-tips">
+				<text>提示：点击卡片任意处可进入单独调价与参数修改</text>
+			</view>
+		</view>
+
+		<!-- 自定义弹窗群 -->
+		<view class="custom-modal-mask" v-if="customModalShow" @click="cancelCustomModal">
+			<view class="custom-modal-container" @click.stop>
+				<view class="custom-modal-title">{{ customModalTitle }}</view>
+				<view class="custom-modal-content">{{ customModalContent }}</view>
+				<view class="custom-modal-footer">
+					<button class="c-modal-btn c-btn-cancel" @click="cancelCustomModal">取消</button>
+					<button class="c-modal-btn c-btn-confirm" @click="confirmCustomModal">确定</button>
+				</view>
+			</view>
+		</view>
+
+		<!-- 统一的字段全称查看弹窗 -->
+		<view class="custom-modal-mask" v-if="detailModalShow" @click="closeDetailModal">
+			<view class="custom-modal-container" @click.stop>
+				<view class="custom-modal-title">{{ detailModalTitle }}</view>
+				<view class="custom-modal-content detail-content-box">{{ detailModalContent || '暂无详细内容' }}</view>
+				<view class="custom-modal-footer">
+					<button class="c-modal-btn c-btn-confirm" @click="closeDetailModal">关闭</button>
+				</view>
+			</view>
+		</view>
+
+		<!-- 弹窗宽度向两边延伸扩宽 -->
+		<view class="custom-modal-mask" v-if="customSelectorShow" @click="closeCustomSelector">
+			<view class="custom-modal-container wide-modal-container" @click.stop>
+				<view class="custom-modal-title">{{ currentSelectorTitle }}</view>
+				<view class="sub-modal-desc">请点击下方选项快速设定，或选择自定义输入</view>
+
+				<scroll-view scroll-y class="template-items-scroll">
+					<view class="template-manage-card" v-for="(opt, idx) in currentSelectorOptions" :key="idx" @click="selectCustomOption(opt)">
+						<view class="manage-card-body" style="margin-bottom: 0; display: flex; justify-content: space-between; align-items: center;">
+							<view style="display: flex; align-items: center; gap: 10rpx;">
+								<view class="dot-icon" style="width: 10rpx; height: 10rpx; background: #d97706; border-radius: 50%;"></view>
+								<text class="manage-item-text" style="font-weight: bold; color: #1e293b;">{{ opt }}</text>
+							</view>
+							<text style="font-size: 22rpx; color: #d97706; background: #fffbeb; padding: 4rpx 14rpx; border-radius: 8rpx;">选用</text>
+						</view>
 					</view>
+				</scroll-view>
+
+				<view class="custom-modal-footer" style="margin-top: 24rpx;">
+					<button class="c-modal-btn c-btn-cancel" @click="closeCustomSelector">取消</button>
 				</view>
-				<view class="goods_line_item title nobor">
-					<view @click="ticketNameShow=true"
-						style="display: flex;align-items: center;justify-content: center;width: 100%; position: relative;height: 100%">
-						<view style="font-size: 1rem">是否含税:</view>
-						<view style="font-size: 20rpx;color: blue;margin-left: 20rpx;">{{ticket_name}}</view>
-						<view style="margin-left: 20rpx;">
-							<u-icon v-if="!ticketNameShow" name="arrow-down-fill" color="#606266" :size="22">
-							</u-icon>
-							<u-icon v-if="ticketNameShow" name="arrow-up-fill" color="#606266" :size="22">
-							</u-icon>
+			</view>
+		</view>
+
+		<view class="custom-modal-mask" v-if="quickModalShow" @click="closeQuickTemplateModal">
+			<view class="custom-modal-container wide-modal-container" @click.stop>
+				<view class="custom-modal-title">商务备注模板库</view>
+				<view class="sub-modal-desc">点击模板即可一键选用，支持个性化录入或清理</view>
+				
+				<div class="add-template-input-row">
+					<input class="modal-inline-input" placeholder="输入新的自定义备注文案..." v-model="newQuickText" />
+					<button class="inline-add-btn" @click="addQuickTemplateItem">新增模板</button>
+				</div>
+
+				<scroll-view scroll-y class="template-items-scroll">
+					<view class="empty-quick-tips" v-if="quickTemplates.length === 0">暂无快捷模板，赶快添加一条吧~</view>
+					<view class="template-manage-card" v-for="(item, idx) in quickTemplates" :key="idx">
+						<view class="manage-card-body" @click="applyQuickTemplate(item)">
+							<view class="card-mini-indicator">
+								<view class="dot-icon"></view>
+								<text class="indicator-title">快捷条款</text>
+							</view>
+							<text class="manage-item-text">{{ item }}</text>
+						</view>
+						<view class="manage-card-footer">
+							<div class="action-btn-pill use-pill" @click="applyQuickTemplate(item)"><text>选用</text></div>
+							<div class="action-btn-pill del-pill" @click="deleteQuickTemplateItem(idx)"><text>删除</text></div>
 						</view>
 					</view>
+				</scroll-view>
+
+				<view class="custom-modal-footer" style="margin-top: 24rpx;">
+					<button class="c-modal-btn c-btn-confirm" @click="closeQuickTemplateModal">关闭窗口</button>
 				</view>
 			</view>
+		</view>
 
-			<view class="custom-table" style="margin-bottom: 30rpx" v-for="(item,i) in list"
-				:class="{'ticket_color': clickIndex==i}" @click="changInfo(item,i)">
-				<view class="d_a w_100" style="flex-direction: row;align-items: stretch;">
-					<view class="xuhao">
-						<p>序号</p>
-						<p>{{ item.sort }}</p>
-					</view>
-					<view class="uni-grid">
-						<view class="uni-row">
-							<view class="uni-col" style="border-bottom: none; border-right: none;">
-								{{item.attr1_key}}:{{ item.attr1 }}
+		<view class="custom-modal-mask" v-if="repCompModalShow" @click="closeRepCompModal">
+			<view class="custom-modal-container wide-modal-container" @click.stop>
+				<!-- 动态弹窗标题：精准区分是选择报价单位还是询价单位 -->
+				<view class="custom-modal-title">{{ repCompTarget === 'question' ? '快速选择询价单位库' : '快速选择报价单位库' }}</view>
+				<view class="sub-modal-desc">点击选用直接录入，支持录入管理</view>
+				
+				<div class="add-template-input-row">
+					<input class="modal-inline-input" placeholder="输入新的单位公司名称..." v-model="newRepCompText" />
+					<button class="inline-add-btn" @click="addRepCompItem">新增单位</button>
+				</div>
+
+				<scroll-view scroll-y class="template-items-scroll">
+					<view class="empty-quick-tips" v-if="repCompList.length === 0">暂无常用单位，赶快添加一个吧~</view>
+					<view class="template-manage-card" v-for="(item, idx) in repCompList" :key="idx">
+						<view class="manage-card-body" @click="applyRepComp(item)">
+							<view class="card-mini-indicator">
+								<view class="dot-icon"></view>
+								<text class="indicator-title">公司抬头名称</text>
 							</view>
-							<view class="uni-col" style="border-bottom: none;">
-							   {{item.attr2_key}}:{{ item.attr2 }}
-							</view>
+							<text class="manage-item-text">{{ item }}</text>
 						</view>
-						<view class="uni-row">
-							<view class="uni-col" style="border-bottom: none; border-right: none;">
-								  {{item.attr3_key}}:{{ item.attr3 }}
-							</view>
-							<view class="uni-col" style="border-bottom: none;background-color: yellow;color: blue;">
-								产品数量:{{ item.nums }}（{{ item.unit }}）
-							</view>
-						</view>
-						<view class="uni-row">
-							<view class="uni-col" style="border-right: none;background-color: yellow;color: blue;">
-								产品单价:{{ item.change_price? item.change_price : 0 }}元
-								<text
-									:class="{'red-text': item.up > 0, 'green-text': item.up < 0, 'black-text': item.up === 0}"
-									style="margin-left: 1rem">
-									( {{item.up>0 ? '+' : ''}} {{ item.up }}%)
-								</text>
-							</view>
-							<view class="uni-col" style="background-color: yellow;color: blue;">
-								合计金额:{{ item.total ? item.total : 0 }}元
-							</view>
+						<view class="manage-card-footer">
+							<div class="action-btn-pill use-pill" @click="applyRepComp(item)"><text>选用</text></div>
+							<div class="action-btn-pill del-pill" @click="deleteRepCompItem(idx)"><text>删除</text></div>
 						</view>
 					</view>
+				</scroll-view>
+
+				<view class="custom-modal-footer" style="margin-top: 24rpx;">
+					<button class="c-modal-btn c-btn-confirm" @click="closeRepCompModal">关闭窗口</button>
 				</view>
-
 			</view>
 		</view>
 
-		<view class="rep_tags">
-			<span style="margin-left: 30rpx">报价单备注信息</span>
-		</view>
-
-		<view class="uni-item">
-			<text class="uni-label">付款方式</text>
-			<picker mode="selector" :range="checkTypeOptions" @change="checkTypeChange">
-				<view class="uni-select">
-					<text class="blue">{{ check_type || '请选择付款方式' }}</text>
-					<u-icon style="margin-left: 10rpx;" name="arrow-down-fill" color="#606266" :size="22">
-					</u-icon>
-				</view>
-			</picker>
-		</view>
-
-		<view class="uni-item">
-			<text class="uni-label">运输方式</text>
-			<picker mode="selector" :range="transTypeOptions" @change="transTypeChange">
-				<view class="uni-select">
-					<text class="blue">{{ trans_type || '请选择运输方式' }}</text>
-					<u-icon style="margin-left: 10rpx;" name="arrow-down-fill" color="#606266" :size="22">
-					</u-icon>
-				</view>
-			</picker>
-		</view>
-
-		<view class="uni-item">
-			<text class="uni-label">运输费用</text>
-			<picker mode="selector" :range="feesOutOptions" @change="feesOutChange">
-				<view class="uni-select">
-					<text class="blue">{{ fees_out || '请选择运输费用' }}</text>
-					<u-icon style="margin-left: 10rpx;" name="arrow-down-fill" color="#606266" :size="22">
-					</u-icon>
-				</view>
-			</picker>
-		</view>
-
-		<view class="uni-item">
-			<text class="uni-label">包装选项</text>
-			<picker mode="selector" :range="packRecyleOptions" @change="packRecyleChange">
-				<view class="uni-select">
-					<text class="blue">	{{ pack_recyle || '请选择包装费用' }}</text>
-					<u-icon style="margin-left: 10rpx;" name="arrow-down-fill" color="#606266" :size="22">
-					</u-icon>
-				</view>
-			</picker>
-		</view>
-
-		<view class="uni-item">
-			<text class="uni-label">报价单位（选填）</text>
-			<input @input="inChange($event,'rep_comp')" v-model="rep_comp"  class="uni-input" placeholder="输入报价单位名称" />
-		</view>
-
-		<view class="uni-item">
-			<text class="uni-label">询价单位（选填）</text>
-			<input @input="inChange($event,'question_comp')" v-model="question_comp" class="uni-input"
-				placeholder="输入询价单位名称" />
-		</view>
-		
-		
-		<view class="uni-item">
-			<text class="uni-label">项目名称（选填）</text>
-			<input @input="inChange($event,'project_comp')" v-model="project_comp" class="uni-input"
-				placeholder="输入施工项目名称" />
-		</view>
-		
-
-		<view class="uni-item">
-			<text class="uni-label">报价人员（选填)</text>
-			<input @input="inChange($event,'rep_user')" v-model="rep_user" class="uni-input" placeholder="请输入报价人姓名" />
-		</view>
-
-		<view class="uni-item">
-			<text class="uni-label">联系手机（选填）</text>
-			<input @input="inChange($event,'rep_phone')" v-model="rep_phone" class="uni-input" placeholder="报价人的联系方式" />
-		</view>
-
-
-		<view class="uni-item">
-			<view class="d_a">
-				<span>报价备注（选填）</span>
-				<view class="moban" @click="goNoteInformation()">快捷模板</view>
-			</view>
-			<span></span>
-		</view>
-		<view class="uni-item">
-			<textarea @input="inChange($event,'tags')" style="min-height: 150rpx;color: blue;width: 100%;text-align: left;" placeholder="请输入报价单备注信息"
-				v-model="tags"></textarea>
-		</view>
-
-
-
-
-
-
-		<view style="width: 750rpx;height: 350rpx;">
-
-		</view>
-		<view class="footerFlex">
-			<view class="totals">
-				<p>
-					<span style="color: blue;">商品总条数：{{ list.length }} </span>
-					<span style="margin-left: 120rpx;color: blue;">合计数量：{{count}}</span>
-				</p>
-				<p style="color: red;">合计总金额：{{ total }}元</p>
-				<p style="color: red;">总金额大写:{{ total_n }}</p>
-				<p class="c_000">订单税率标识：{{ ticket_name }}</p>
-			</view>
-			<view class="footer d_a">
-				<button @click="apply()">确认无误，生产报价单</button>
-				<button @click="clearall()">清空报价单全部商品</button>
-			</view>
-			<view class="rep_tags rep_tags2 d_a_j" style="text-align:center;">
-				<text style="margin-left: 20rpx;">点击单个商品可进行数据修改或调整顺序及删除</text>
-			</view>
-		</view>
-
-
-
-
-
-
-
-
-
-
-		<u-modal v-model="transBidsModalShow" show-cancel-button title="自定义输入" @confirm="transBidsModalConfirm">
-			<view class="slot-content">
-				<input style="padding: 30rpx;" placeholder="请输入自定义填写质量标准信息" type="text" v-model="trans_bids_i" />
-			</view>
+		<u-modal v-model="checkTypeModalShow" show-cancel-button title="自定义付款方式" @confirm="checkTypeModalConfirm">
+			<view class="slot-content"><input class="modal-input" placeholder="请输入自定义付款方式" v-model="check_type_i" /></view>
+		</u-modal>
+		<u-modal v-model="transTypeModalShow" show-cancel-button title="自定义运输方式" @confirm="transTypeModalConfirm">
+			<view class="slot-content"><input class="modal-input" placeholder="请输入自定义运输方式" v-model="trans_type_i" /></view>
+		</u-modal>
+		<u-modal v-model="feesOutModalShow" show-cancel-button title="自定义运输费用" @confirm="feesOutModalConfirm">
+			<view class="slot-content"><input class="modal-input" placeholder="请输入自定义运输费用说明" v-model="fees_out_i" /></view>
+		</u-modal>
+		<u-modal v-model="packRecyleModalShow" show-cancel-button title="自定义包装选项" @confirm="packRecyleModalConfirm">
+			<view class="slot-content"><input class="modal-input" placeholder="请输入自定义包装说明" v-model="pack_recyle_i" /></view>
 		</u-modal>
 
-
-		<u-modal v-model="checkTypeModalShow" show-cancel-button title="自定义输入" @confirm="checkTypeModalConfirm">
-			<view class="slot-content">
-				<input style="padding: 30rpx;"   placeholder="请输入自定义信息" type="text" v-model="check_type_i" />
-			</view>
+		<!-- 独立修改子项弹窗 -->
+		<u-modal v-model="nameModalShow" title="修改商品名称">
+			<view class="slot-content"><input class="modal-input" placeholder="请输入商品名称" v-model="chData.name" /></view>
+		</u-modal>
+		<u-modal v-model="attr2ModalShow" title="修改产品型号">
+			<view class="slot-content"><input class="modal-input" placeholder="请输入产品型号" v-model="chData.attr2" /></view>
+		</u-modal>
+		<u-modal v-model="attr1ModalShow" title="修改电压等级">
+			<view class="slot-content"><input class="modal-input" placeholder="请输入电压等级" v-model="chData.attr1" /></view>
+		</u-modal>
+		<u-modal v-model="attr3ModalShow" title="修改产品规格">
+			<view class="slot-content"><input class="modal-input" placeholder="请输入产品规格" v-model="chData.attr3" /></view>
+		</u-modal>
+		<u-modal v-model="unitModalShow" title="修改计量单位">
+			<view class="slot-content"><input class="modal-input" placeholder="请输入计量单位" v-model="chData.unit" /></view>
 		</u-modal>
 
-		<u-modal v-model="transTypeModalShow" show-cancel-button title="自定义输入" @confirm="transTypeModalConfirm">
-			<view class="slot-content">
-				<input style="padding: 30rpx;" placeholder="请输入自定义信息" type="text" v-model="trans_type_i" />
-			</view>
-		</u-modal>
+		<u-select v-model="ticketNameShow" @confirm="ticketNameConfirm" :list="ticketNameList" :default-value="[ticket]"></u-select>
 
-		<u-modal v-model="feesOutModalShow" show-cancel-button title="自定义输入" @confirm="feesOutModalConfirm">
-			<view class="slot-content">
-				<input style="padding: 30rpx;" placeholder="请输入自定义信息" type="text" v-model="fees_out_i" />
-			</view>
-		</u-modal>
-
-		<u-modal v-model="packRecyleModalShow" show-cancel-button title="自定义输入" @confirm="packRecyleModalConfirm">
-			<view class="slot-content">
-				<input style="padding: 30rpx;" placeholder="请输入自定义信息" type="text" v-model="pack_recyle_i" />
-			</view>
-		</u-modal>
-
-
-
-		<u-modal v-model="attr2ModalShow" title="产品型号">
-			<view class="slot-content">
-				<input style="padding: 30rpx;" placeholder="请输入产品型号" type="text" v-model="chData.attr2" />
-			</view>
-		</u-modal>
-
-		<u-modal v-model="attr1ModalShow" title="电压等级">
-			<view class="slot-content">
-				<input style="padding: 30rpx;" placeholder="请输入电压等级" type="text" v-model="chData.attr1" />
-			</view>
-		</u-modal>
-
-
-
-
-
-		<u-select v-model="transBidsShow" @confirm="transBidsConfirm" :list="transBidsList"></u-select>
-		<u-select v-model="ticketNameShow" @confirm="ticketNameConfirm" :list="ticketNameList"></u-select>
-
+		<!-- 单品精细微调弹窗 -->
 		<uni-popup ref="popup" type="center">
-			<view class="mark_body">
-				<view class="w_100 d_a_j fw_700 " style="color: #000;font-size: 32rpx;margin-bottom: 20rpx;">
-					报价单（单项商品）信息修改器</view>
-				<view class="d_a" style="flex-direction: column;width: 80%">
-					<!-- <view class="d_a_sb w_100 mt_1">
-						<view>
-							<span>商品排序：</span>
-							<span>{{ chData.sort }}</span>
-						</view>
-						<view class="ceilNumb" style="padding: 0">
-							<u-button type="primary" size="mini" @click="sortRevCeil()">下调</u-button>
-							<u-button style="margin-left: 10rpx;" @click="sortAddCeil()" type="error"
-								size="mini">上调</u-button>
-						</view>
-					</view> -->
-					<view class="w_100 mt_2 d_a_sb">
-						<text>电压等级：{{chData.attr1}}</text>
-						<view>
-							<u-button @click="attr1ModalShow=true" type="primary" size="mini">点击修改</u-button>
-						</view>
+			<div class="amber-popup-card-box">
+				<div class="popup-title">单项商品单独调价与参数修改</div>
+				
+				<div class="popup-form-item">
+					<span class="pop-label">商品名称：{{ chData.name || '无' }}</span>
+					<view class="amber-mini-btn" @click="nameModalShow=true">修改</view>
+				</div>
+				<div class="popup-form-item">
+					<span class="pop-label">产品型号：{{ chData.attr2 || '无' }}</span>
+					<view class="amber-mini-btn" @click="attr2ModalShow=true">修改</view>
+				</div>
+				<div class="popup-form-item">
+					<span class="pop-label">电压等级：{{ chData.attr1 || '无' }}</span>
+					<view class="amber-mini-btn" @click="attr1ModalShow=true">修改</view>
+				</div>
+				<div class="popup-form-item">
+					<span class="pop-label">产品规格：{{ chData.attr3 || '无' }}</span>
+					<view class="amber-mini-btn" @click="attr3ModalShow=true">修改</view>
+				</div>
+				<div class="popup-form-item">
+					<span class="pop-label">计量单位：{{ chData.unit || '无' }}</span>
+					<view class="amber-mini-btn" @click="unitModalShow=true">修改</view>
+				</div>
 
-					</view>
-					<view class="w_100 mt_2 d_a_sb">
-						<text>产品型号：{{chData.attr2}}</text>
-						<view>
-							<u-button @click="attr2ModalShow=true" type="primary" size="mini">点击修改</u-button>
-						</view>
+				<div class="popup-form-item">
+					<span class="pop-label-red">修改数量：</span>
+					<div class="popup-stepper">
+						<span @click="cnrCeil(0)">-</span>
+						<input type="number" v-model="chData.nums" class="pop-input-red" />
+						<span @click="cnrCeil(1)">+</span>
+					</div>
+				</div>
 
-					</view>
-					<view class="w_100 mt_2 d_a_sb">
-						<span>产品数量：{{chData.nums}}<span>{{chData.unit}}</span></span>
-						<view class="ceilNumb" style="padding: 0">
-							<span @click="cnrCeil(0)">-</span>
-							<input type="text" v-model="chData.nums" />
-							<span @click="cnrCeil(1)">+</span>
-						</view>
-					</view>
+				<div class="popup-form-item">
+					<span class="pop-label">单品浮动（0.5%步长）：</span>
+					<div class="popup-stepper">
+						<span @click="priceCeil(0)">-</span>
+						<text :class="['pop-val-text', Number(chData.up || 0) > 0 ? 'text-red' : (Number(chData.up || 0) < 0 ? 'text-green' : 'text-gray')]">
+							{{ Number(chData.up || 0) > 0 ? '+' + Number(chData.up).toFixed(1) : Number(chData.up || 0).toFixed(1) }}%
+						</text>
+						<span @click="priceCeil(1)">+</span>
+					</div>
+				</div>
 
-					<view class="w_100 mt_2 d_a_sb ">
-						<view>
-							<span class="">产品价格：</span>
-							<span
-								class="value">{{ (chData.price * (1+ chData.up/100) * chData.ticket_fee *(1+repratio/100)).toFixed(2) }}元</span>
-						</view>
-						<view class="ceilNumb" style="padding: 0">
-							<span @click="priceCeil(0)">-</span>
-							<span :class="chData.up>0 ? 'red' : chData.up<0?'green':chData.up==0?'black':''"
-								class="value">{{ chData.up }}%</span>
-							<span @click="priceCeil(1)">+</span>
-						</view>
-					</view>
+				<div class="popup-calc-preview">
+					当前计算单价：<text class="preview-price">¥{{ (Number(chData.price || 0) * (1 + Number(chData.up || 0)/100) * (Number(chData.ticket_fee || 1)) * (1 + Number(repratio)/100)).toFixed(2) }}</text>
+				</div>
 
-
-				</view>
-
-				<view class="w_100 d_a_sa" style="margin-top: 40rpx; height: 80rpx">
-					<u-button @click="changAttr()" type="primary">确认</u-button>
-					<u-button @click="changDels()" type="error">删除</u-button>
-					<u-button @click="cancellation()">取消</u-button>
-				</view>
-
-
-			</view>
-
+				<!-- 重置功能与按钮排布（四按钮均分平铺：保存、重置、删除、取消） -->
+				<div class="popup-buttons-row">
+					<view class="amber-pop-btn confirm-btn" @click="changAttr()">保存</view>
+					<view class="amber-pop-btn reset-btn" @click="resetItemData()">重置</view>
+					<view class="amber-pop-btn delete-btn" @click="changDels()">删除</view>
+					<view class="amber-pop-btn cancel-btn" @click="cancellation()">取消</view>
+				</div>
+			</div>
 		</uni-popup>
-
 
 	</view>
 </template>
@@ -353,64 +444,47 @@
 				transTypeOptions: ['物流运输', '专车运输', '买方自提', '自定义输入'],
 				feesOutOptions: ['买方负责', '卖方负责', '双方协商', '自定义输入'],
 				packRecyleOptions: ['报价包含产品包装', '报价不含产品包装', '包装需要退还卖方', '买卖双方协商包装', '自定义输入'],
-				// 当前选中的选项索引
+				
+				customSelectorShow: false,
+				currentSelectorTitle: '',
+				currentSelectorOptions: [],
+				currentSelectorKey: '',
+
+				// 全称查看弹窗相关状态
+				detailModalShow: false,
+				detailModalTitle: '',
+				detailModalContent: '',
+
 				trans_type_i: '',
 				trans_bids_i: '',
 				check_type_i: '',
 				fees_out_i: '',
 				pack_recyle_i: '',
 				packRecyleModalShow: false,
+				nameModalShow: false,
 				attr2ModalShow: false,
 				attr1ModalShow: false,
-
-
+				attr3ModalShow: false,
+				unitModalShow: false,
 				feesOutModalShow: false,
 				transTypeModalShow: false,
 				checkTypeModalShow: false,
-				transBidsModalShow: false,
 				ticketNameShow: false,
-				ticketNameList: [{
-						value: 0,
-						label: '不含发票'
-					},
-					{
-						value: 2,
-						label: '含专用发票'
-					},
-					{
-						value: 1,
-						label: '含普通发票'
-					},
+				ticketNameList: [
+					{ value: 0, label: '不含发票' },
+					{ value: 2, label: '含专用发票' },
+					{ value: 1, label: '含普通发票' },
 				],
-				transBidsList: [{
-						value: '国家标准',
-						label: '国家标准'
-					},
-					{
-						value: '市场标准',
-						label: '市场标准'
-					},
-					{
-						value: '企业标准',
-						label: '企业标准'
-					},
-					{
-						value: '自定义填写质量标准信息',
-						label: '自定义填写质量标准信息'
-					}
-				],
-				transBidsShow: false,
 				uid: '',
-				list: '',
-				ticket_color: "red",
+				list: [],
+				ticket_color: "blue",
 				ticket_name: "",
-				total: '',
+				total: 0,
 				total_n: '',
 				ratio: '',
-				ticket: '',
-				//
+				ticket: 0,
 				check_type: "",
-				trans_bids: "国家标准",
+				trans_bids: "",
 				trans_type: "",
 				fees_out: "",
 				pack_recyle: "",
@@ -422,21 +496,23 @@
 				repdate: '',
 				repratio: 0,
 				tags: "",
-				//
-				chshow: 0,
-				chData: '',
-				customTicketInfo: '', // 添加这个属性
-				sortNumber: 0, //排序的数字
-				clickIndex: null, //点击的索引
+				chData: {},
+				originalChData: {}, // 用于记录单品重置的原始载入状态
+				clickIndex: null,
 				question_comp: "",
 				project_comp: "",
-				logoInfo: {
-					img_site: ''
-				},
-				templateInfo: null,
-				logo: null,
-				comp_title: null,
+				logoInfo: { img_site: '' },
 				count: 0,
+				customModalShow: false,
+				customModalTitle: '提示',
+				customModalContent: '确定要清空报价单全部商品吗？',
+				quickModalShow: false,
+				newQuickText: '',
+				quickTemplates: [],
+				repCompModalShow: false,
+				repCompTarget: 'rep', // 记录当前快速选择单位的目标：'rep'代表报价单位，'question'代表询价单位
+				newRepCompText: '',
+				repCompList: []
 			}
 		},
 		onLoad() {
@@ -451,38 +527,231 @@
 							uni.reLaunch({
 								url: '/pages/login_md/login_md'
 							})
-						} else if (res.cancel) {
-							console.log('用户点击取消');
 						}
 					}
 				});
 			} else {
-				console.log(userInfo);
-				this.uid = userInfo.id
-				this.doIninit()
+				this.uid = userInfo.id;
+				this.doIninit();
+				this.loadLocalQuickTemplates();
+				this.loadLocalRepComps();
 			}
-			uni.$on("manageTableLogo", data => {
-				this.myCallbackFunction(data)
-			})
-
 			uni.$on("noteInformation", data => {
 				this.myCallbackNoteInformation(data)
 			})
-
 		},
 		beforeCreate() {
-			uni.$off(['manageTableLogo', "noteInformation"]); //页面销毁  移除 监听websocket回复通知  事件
+			uni.$off(["noteInformation"]);
 		},
 		methods: {
+			openDetailModal(title, content) {
+				this.detailModalTitle = title;
+				this.detailModalContent = content || '暂无详细内容';
+				this.detailModalShow = true;
+			},
+			openDetailModalConditionally(title, content, event) {
+				if (!content || String(content).length <= 15) {
+					return;
+				}
+				if (event && event.currentTarget) {
+					const { scrollWidth, clientWidth } = event.currentTarget;
+					if (scrollWidth <= clientWidth) {
+						return;
+					}
+				}
+				this.openDetailModal(title, content);
+			},
+			closeDetailModal() {
+				this.detailModalShow = false;
+			},
+			openCustomSelector(key) {
+				this.currentSelectorKey = key;
+				if (key === 'check_type') {
+					this.currentSelectorTitle = '选择付款方式';
+					this.currentSelectorOptions = this.checkTypeOptions;
+				} else if (key === 'trans_type') {
+					this.currentSelectorTitle = '选择运输方式';
+					this.currentSelectorOptions = this.transTypeOptions;
+				} else if (key === 'fees_out') {
+					this.currentSelectorTitle = '选择运输费用负担';
+					this.currentSelectorOptions = this.feesOutOptions;
+				} else if (key === 'pack_recyle') {
+					this.currentSelectorTitle = '选择包装选项要求';
+					this.currentSelectorOptions = this.packRecyleOptions;
+				}
+				this.customSelectorShow = true;
+			},
+			closeCustomSelector() {
+				this.customSelectorShow = false;
+			},
+			selectCustomOption(opt) {
+				this.customSelectorShow = false;
+				let idx = this.currentSelectorOptions.indexOf(opt);
+				let key = this.currentSelectorKey;
+
+				if (opt === '自定义输入' || idx === this.currentSelectorOptions.length - 1) {
+					if (key === 'check_type') this.checkTypeModalShow = true;
+					if (key === 'trans_type') this.transTypeModalShow = true;
+					if (key === 'fees_out') this.feesOutModalShow = true;
+					if (key === 'pack_recyle') this.packRecyleModalShow = true;
+					return;
+				}
+
+				if (key === 'check_type') {
+					this.check_type = opt;
+					this.bjChange(opt, 'check_type');
+				} else if (key === 'trans_type') {
+					this.trans_type = opt;
+					this.bjChange(opt, 'trans_type');
+				} else if (key === 'fees_out') {
+					this.fees_out = opt;
+					this.bjChange(opt, 'fees_out');
+				} else if (key === 'pack_recyle') {
+					this.pack_recyle = opt;
+					this.bjChange(opt, 'pack_recyle');
+				}
+				uni.showToast({ title: '已设定', icon: 'success' });
+			},
+			loadLocalQuickTemplates() {
+				let storageKey = 'local_quick_remark_templates_' + this.uid;
+				let localData = uni.getStorageSync(storageKey);
+				if (localData && Array.isArray(localData)) {
+					this.quickTemplates = localData;
+				} else {
+					this.quickTemplates = [
+						'本报价单含运费及税金，有效期为15天。',
+						'定制规格产品非质量问题概不退换。',
+						'货到现场后请当面清点验收，如有异议请于3日内提出。'
+					];
+					this.saveLocalQuickTemplates();
+				}
+			},
+			saveLocalQuickTemplates() {
+				let storageKey = 'local_quick_remark_templates_' + this.uid;
+				uni.setStorageSync(storageKey, this.quickTemplates);
+			},
+			openQuickTemplateModal() {
+				this.newQuickText = '';
+				this.quickModalShow = true;
+			},
+			closeQuickTemplateModal() {
+				this.quickModalShow = false;
+			},
+			addQuickTemplateItem() {
+				if (!this.newQuickText || !this.newQuickText.trim()) {
+					uni.showToast({ title: '请输入有效的文案内容', icon: 'none' });
+					return;
+				}
+				this.quickTemplates.push(this.newQuickText.trim());
+				this.saveLocalQuickTemplates();
+				this.newQuickText = '';
+				uni.showToast({ title: '添加成功', icon: 'success' });
+			},
+			deleteQuickTemplateItem(index) {
+				uni.showModal({
+					title: '提示',
+					content: '确定要删除这条快捷模板吗？',
+					success: (res) => {
+						if (res.confirm) {
+							this.quickTemplates.splice(index, 1);
+							this.saveLocalQuickTemplates();
+							uni.showToast({ title: '已删除', icon: 'success' });
+						}
+					}
+				});
+			},
+			applyQuickTemplate(text) {
+				if (this.tags && this.tags.trim().length > 0) {
+					this.tags = this.tags + (this.tags.endsWith('\n') ? '' : '\n') + text;
+				} else {
+					this.tags = text;
+				}
+				this.reportNewChange({ tags: this.tags });
+				this.closeQuickTemplateModal();
+				uni.showToast({ title: '已成功选用模板', icon: 'success' });
+			},
+			loadLocalRepComps() {
+				let storageKey = 'local_rep_comp_list_' + this.uid;
+				let localData = uni.getStorageSync(storageKey);
+				if (localData && Array.isArray(localData)) {
+					this.repCompList = localData;
+				} else {
+					this.repCompList = [
+						'某某电缆销售有限公司',
+						'某某线缆集团股份有限公司'
+					];
+					this.saveLocalRepComps();
+				}
+			},
+			saveLocalRepComps() {
+				let storageKey = 'local_rep_comp_list_' + this.uid;
+				uni.setStorageSync(storageKey, this.repCompList);
+			},
+			// 修复：支持接收 target 参数，区分是为“报价单位(rep)”还是“询价单位(question)”打开单位库
+			openRepCompModal(target = 'rep') {
+				this.repCompTarget = target;
+				this.newRepCompText = '';
+				this.repCompModalShow = true;
+			},
+			closeRepCompModal() {
+				this.repCompModalShow = false;
+			},
+			addRepCompItem() {
+				if (!this.newRepCompText || !this.newRepCompText.trim()) {
+					uni.showToast({ title: '请输入有效的公司名称', icon: 'none' });
+					return;
+				}
+				this.repCompList.push(this.newRepCompText.trim());
+				this.saveLocalRepComps();
+				this.newRepCompText = '';
+				uni.showToast({ title: '添加成功', icon: 'success' });
+			},
+			deleteRepCompItem(index) {
+				uni.showModal({
+					title: '提示',
+					content: '确定要删除这个常用单位吗？',
+					success: (res) => {
+						if (res.confirm) {
+							this.repCompList.splice(index, 1);
+							this.saveLocalRepComps();
+							uni.showToast({ title: '已删除', icon: 'success' });
+						}
+					}
+				});
+			},
+			// 修复：根据 repCompTarget 精准回填对应字段，互不干扰
+			applyRepComp(compName) {
+				if (this.repCompTarget === 'question') {
+					this.question_comp = compName;
+					this.reportNewChange({ question_comp: this.question_comp });
+				} else {
+					this.rep_comp = compName;
+					this.reportNewChange({ rep_comp: this.rep_comp });
+				}
+				uni.showToast({ title: '已选用', icon: 'success' });
+				this.closeRepCompModal();
+			},
 			changDels() {
 				let that = this;
-				let params = {
-					id: that.chData.id,
-				};
+				let params = { id: that.chData.id };
 				that.$api.reportDel(params).then(ret => {
-					this.$refs.popup.close()
+					this.$refs.popup.close();
 					that.doIninit();
 				})
+			},
+			quickDelete(item, i) {
+				let that = this;
+				uni.showModal({
+					title: '提示',
+					content: '确定要移除该商品吗？',
+					success: (res) => {
+						if (res.confirm) {
+							that.$api.reportDel({ id: item.id }).then(ret => {
+								that.doIninit();
+							})
+						}
+					}
+				});
 			},
 			changAttr() {
 				let that = this;
@@ -492,118 +761,95 @@
 					...this.chData,
 				};
 				that.$api.reportChange(params).then(ret => {
-					this.$refs.popup.close()
+					this.$refs.popup.close();
 					that.doIninit();
 				})
 			},
-			sortRevCeil() {
-				console.log(111111)
-				if (this.chData.sort == 0) {
-					return;
-
+			// 实现精准重置方法：点击重置时清空并返回快照初始状态（名称、型号、电压、规格、计量单位、数量及浮动率归零），确保id完整并支持后续正常保存
+			resetItemData() {
+				if (this.originalChData) {
+					let originId = this.chData.id;
+					this.chData = Object.assign({}, this.originalChData, { id: originId, up: 0 });
 				}
-				this.chData.sort--;
-				let that = this;
-				var params = {
-					ids: that.chData.id,
-					sort: this.chData.sort,
-				};
-				that.$api.reportChange(params).then(ret => {
-					that.doIninit();
-				})
-
-			},
-			sortAddCeil() {
-				console.log(222)
-				this.chData.sort++;
-				let that = this;
-				var params = {
-					ids: that.chData.id,
-					sort: this.chData.sort,
-				};
-				that.$api.reportChange(params).then(ret => {
-					console.log(ret)
-					that.doIninit();
-				})
-
+				// 修复：改用无图标轻提示，防止遮挡文字内容，并且不影响后续的保存操作
+				uni.showToast({ title: '商品信息已重置', icon: 'none' });
 			},
 			priceCeil(type) {
-				this.chData.up = parseInt(this.chData.up)
-				if (type == 1) { //加
-					let num = this.chData.up + 1;
-					this.chData.up = num > 100 ? 100 : num;
+				let up = parseFloat(this.chData.up || 0);
+				if (type == 1) {
+					let num = up + 0.5;
+					this.chData.up = num > 100 ? 100 : Number(num.toFixed(1));
 				} else {
-					let num = this.chData.up - 1;
-					this.chData.up = num >= -100 ? num : 0;
+					let num = up - 0.5;
+					this.chData.up = num >= -100 ? Number(num.toFixed(1)) : -100;
 				}
 			},
 			cnrCeil(type) {
 				let that = this;
-				let temp = type > 0 ? parseInt(that.chData.nums) + 1 : that.chData.nums - 1;
+				let temp = type > 0 ? parseInt(that.chData.nums || 0) + 1 : that.chData.nums - 1;
 				let nums = temp < 1 ? 1 : temp;
 				that.chData.nums = nums;
 			},
-			changInfo(e, i) {
+			openItemPopup(e, i) {
 				let that = this;
 				this.clickIndex = i;
-				that.chData = e;
-				that.chData.sort = parseInt(e.sort);
-				this.$refs.popup.open()
-				////
-				console.log(e);
+				// 优先使用缓存的最初原始状态快照作为重置基准
+				let initialObj = e._initial ? e._initial : e;
+				that.originalChData = Object.assign({}, initialObj);
+				that.chData = Object.assign({}, e);
+				that.chData.sort = parseInt(e.sort || i + 1);
+				this.$refs.popup.open();
 			},
 			cancellation() {
-				this.$refs.popup.close()
-				this.doIninit()
+				this.$refs.popup.close();
+				this.doIninit();
 			},
 			goNoteInformation() {
 				uni.navigateTo({
 					url: '/pages/report/noteInformation'
 				})
 			},
-			myCallbackFunction(_params) {
-				this.logoInfo = _params;
-				this.logo = _params.img_site;
-				this.comp_title = _params.title;
-
-				this.reportNewChange({
-					logo: _params.img
-				})
-				this.reportNewChange({
-					comp_title: _params.title
-				})
-				console.log(_params)
-			},
 			myCallbackNoteInformation(_params) {
-				this.templateInfo = _params;
 				this.tags = _params.title;
-				this.reportNewChange({
-					tags: this.tags
-				})
+				this.reportNewChange({ tags: this.tags });
 			},
 			clearall() {
+				this.customModalTitle = '提示';
+				this.customModalContent = '确定要清空报价单全部商品吗？';
+				this.customModalShow = true;
+			},
+			confirmCustomModal() {
 				let that = this;
-				var params = {
-					uid: that.uid
-				};
-				uni.showModal({
-					title: '提示',
-					content: '确定要清空报价单的全部内容',
-					success: (res) => {
-						if (res.confirm) {
-							that.$api.clearall(params).then(ret => {
-								that.doIninit();
-							})
-						} else if (res.cancel) {
-							console.log('用户点击取消');
-						}
-					}
+				var params = { uid: that.uid };
+				that.$api.clearall(params).then(ret => {
+					that.customModalShow = false;
+					that.doIninit();
 				});
 			},
+			cancelCustomModal() {
+				this.customModalShow = false;
+			},
 			apply() {
+				if (!this.check_type) {
+					uni.showToast({ title: '请选择付款方式', icon: 'none' });
+					return;
+				}
+				if (!this.trans_type) {
+					uni.showToast({ title: '请选择运输方式', icon: 'none' });
+					return;
+				}
+				if (!this.fees_out) {
+					uni.showToast({ title: '请选择运输费用', icon: 'none' });
+					return;
+				}
+				if (!this.pack_recyle) {
+					uni.showToast({ title: '请选择包装选项', icon: 'none' });
+					return;
+				}
+
 				uni.showModal({
 					title: '提示',
-					content: '是否生成报价单内容？',
+					content: '确认无误，是否立即生成报价单？',
 					success: (res) => {
 						if (res.confirm) {
 							let that = this;
@@ -629,733 +875,1183 @@
 								question_comp: that.question_comp,
 								project_comp: that.project_comp,
 							};
-							if (that.trans_bids.length < 1) {
-								uni.showToast({
-									icon: 'none',
-									title: "请选择质量标准"
-								})
-								return false;
-							}
-
 							that.$api.lists_add(params).then(ret => {
 								this.innerAudioContext = uni.createInnerAudioContext();
-								this.innerAudioContext.src = "/static/voice/report.mp3"; // 设置音频资源的地址
-								this.innerAudioContext.play(); // 播放音频
+								this.innerAudioContext.src = "/static/voice/report.mp3";
+								this.innerAudioContext.play();
 								uni.navigateTo({
 									url: '/pages/report/repindex'
 								})
 							})
-						} else if (res.cancel) {
-							console.log('用户点击取消');
 						}
 					}
 				});
 			},
 			inChange(e, key) {
-				console.log(e.detail.value, key)
-				this.reportNewChange({
-					[key]: e.detail.value
-				})
-			},
-			//
-			packRecyleChange(e) {
-				if (e.detail.value == 4) {
-					this.packRecyleModalShow = true
-				} else {
-					this.pack_recyle = this.packRecyleOptions[e.detail.value]
-					this.bjChange(this.fees_out, "pack_recyle")
-				}
-			},
-			feesOutChange(e) {
-				if (e.detail.value == 3) {
-					this.feesOutModalShow = true
-				} else {
-					this.fees_out = this.feesOutOptions[e.detail.value]
-					this.bjChange(this.fees_out, "fees_out")
-				}
-			},
-			transTypeChange(e) {
-				if (e.detail.value == 3) {
-					this.transTypeModalShow = true
-				} else {
-					this.trans_type = this.transTypeOptions[e.detail.value]
-					this.bjChange(this.trans_type, "trans_type")
-				}
-			},
-			checkTypeChange(e) {
-				if (e.detail.value == 3) {
-					this.checkTypeModalShow = true
-				} else {
-					this.check_type = this.checkTypeOptions[e.detail.value]
-					this.bjChange(this.check_type, "check_type")
-				}
+				this.reportNewChange({ [key]: e.detail.value });
 			},
 			packRecyleModalConfirm(e) {
-				this.pack_recyle = this.pack_recyle_i
-				this.bjChange(this.pack_recyle, "pack_recyle")
-
+				this.pack_recyle = this.pack_recyle_i;
+				this.bjChange(this.pack_recyle, "pack_recyle");
 			},
 			feesOutModalConfirm(e) {
-				this.fees_out = this.fees_out_i
-				this.bjChange(this.fees_out, "fees_out")
+				this.fees_out = this.fees_out_i;
+				this.bjChange(this.fees_out, "fees_out");
 			},
 			transTypeModalConfirm(e) {
-				this.trans_type = this.trans_type_i
-
-				this.bjChange(this.trans_type, "trans_type")
+				this.trans_type = this.trans_type_i;
+				this.bjChange(this.trans_type, "trans_type");
 			},
 			checkTypeModalConfirm(e) {
-				this.check_type = this.check_type_i
-				this.bjChange(this.check_type, "check_type")
-			},
-			transBidsModalConfirm(e) {
-				this.trans_bids = this.trans_bids_i
-				this.bjChange(this.trans_bids_i, "trans_bids")
+				this.check_type = this.check_type_i;
+				this.bjChange(this.check_type, "check_type");
 			},
 			bjChange(e, key) {
-				this.reportNewChange({
-					[key]: e
-				})
-				console.log(e, key)
+				this.reportNewChange({ [key]: e });
 			},
 			ticketNameConfirm(e) {
-				this.ticket_name = e[0].label
-				this.ticket=e[0].value
-				this.$api.changeTicket({uid:this.uid,ticket:this.ticket}).then(res => {
-				  this.doIninit()
-				}).catch(err => {
-							
-				});
-			},
-			
-			
-			
-			
-			transBidsConfirm(e) {
-				if (e[0].value == "自定义填写质量标准信息") {
-					this.transBidsModalShow = true
-				} else {
-					this.trans_bids = e[0].value
-
-					this.bjChange(e[0].value, "trans_bids")
-				}
-				console.log(e[0].value)
-
-			},
-			chaLogo() {
-				this.logoInfo.img_site = '';
-				this.reportNewChange({
-					logo: null
-				})
-			},
-
-			revCeil() {
-				let num = this.repratio - 1;
-				this.repratio = num >= -100 ? num : 0;
-				this.reportNewChange({
-					ratio: this.repratio
-				})
-				setTimeout(()=>{
+				this.ticket_name = e[0].label;
+				this.ticket = Number(e[0].value);
+				this.$api.changeTicket({ uid: this.uid, ticket: this.ticket }).then(res => {
 					this.doIninit();
-				},200)
-				
+				}).catch(err => {});
+			},
+			revCeil() {
+				let num = Number(this.repratio || 0) - 0.5;
+				this.repratio = num >= -100 ? Number(num.toFixed(1)) : 0;
+				this.reportNewChange({ ratio: this.repratio });
+				setTimeout(() => { this.doIninit(); }, 200);
 			},
 			addCeil() {
-				let num = this.repratio + 1;
-				this.repratio = num >= 100 ? 100 : num;
-				this.reportNewChange({
-					ratio: this.repratio
-				})
-				
-				setTimeout(()=>{
-					this.doIninit();
-				},200)
-			},
-			goManageTableLogo() {
-				uni.navigateTo({
-					url: '/pages/report/manageTableLogo'
-				})
+				let num = Number(this.repratio || 0) + 0.5;
+				this.repratio = num <= 100 ? Number(num.toFixed(1)) : 100;
+				this.reportNewChange({ ratio: this.repratio });
+				setTimeout(() => { this.doIninit(); }, 200);
 			},
 			reportNewChange(data) {
-				this.$api.ReportNewChange({
-					uid: this.uid,
-					...data
-				})
+				this.$api.ReportNewChange({ uid: this.uid, ...data });
 			},
 			doIninit() {
 				let that = this;
-				var params = {
-					uid: that.uid,
-					ratio: that.repratio
-				};
+				var params = { uid: that.uid, ratio: that.repratio };
 				that.$api.ReportNewList(params).then(ret => {
-					that.list = ret.data.list;
-					console.log("11111111")
-					this.count = 0
-					this.list.forEach((item, index) => {
-						this.count += parseInt(item.nums)
-					})
+					that.list = ret.data.list || [];
+					this.count = 0;
+					this.list.forEach((item) => {
+						this.count += parseInt(item.nums || 0);
+						// 记录并缓存每个商品初次进入报价单时的纯净原始状态快照，确保重置时万无一失
+						if (!item._initial) {
+							item._initial = {
+								id: item.id,
+								name: item.name || item.title || item.goods_name || '',
+								attr1: item.attr1 || '',
+								attr2: item.attr2 || '',
+								attr3: item.attr3 || '',
+								unit: item.unit || '',
+								nums: item.nums || 0,
+								up: 0,
+								price: item.price || 0,
+								change_price: item.change_price
+							};
+						}
+					});
 
 					that.total = ret.data.total;
 					that.total_n = ret.data.total_n;
 					that.ratio = ret.data.ratio;
-					that.ticket = ret.data.ticket;
+					
+					let remoteTicket = ret.data.report_temp ? ret.data.report_temp.ticket : ret.data.ticket;
+					that.ticket = (remoteTicket !== undefined && remoteTicket !== null && remoteTicket !== '') ? Number(remoteTicket) : 0;
 
 					if (ret.data.report_temp) {
-						this.logoInfo.img_site = ret.data.report_temp.logo;
 						that.check_type = ret.data.report_temp.check_type;
 						that.trans_type = ret.data.report_temp.trans_type;
 						that.fees_out = ret.data.report_temp.fees_out;
 						that.pack_recyle = ret.data.report_temp.pack_recyle;
 						that.rep_comp = ret.data.report_temp.rep_comp;
 						that.use_comp = ret.data.report_temp.use_comp;
-
 						that.pro_time = ret.data.report_temp.pro_time;
 						that.rep_user = ret.data.report_temp.rep_user;
 						that.rep_phone = ret.data.report_temp.rep_phone;
 						that.tags = ret.data.report_temp?.tags;
 						that.question_comp = ret.data.report_temp.question_comp;
 						that.project_comp = ret.data.report_temp.project_comp;
-						that.logo = ret.data.report_temp.logo;
-						that.comp_title = ret.data.report_temp.comp_title;
-
-						this.trans_bids = ret.data.report_temp.trans_bids
-						that.ticket = ret.data.report_temp.ticket;
-						
-						that.repratio = parseInt(ret.data.report_temp.ratio);
-
-					}else {
-						this.logoInfo.img_site='';
+						this.trans_bids = ret.data.report_temp.trans_bids;
+						that.repratio = parseFloat(ret.data.report_temp.ratio || 0);
+					} else {
 						that.check_type = '';
 						that.trans_type = '';
 						that.fees_out = '';
 						that.pack_recyle = '';
 						that.rep_comp = '';
 						that.use_comp = '';
-						
 						that.pro_time = '';
 						that.rep_user = '';
 						that.rep_phone = '';
 						that.tags = '';
 						that.question_comp = '';
 						that.project_comp = '';
-						that.logo = '';
-						that.comp_title = '';
 						this.trans_bids = '';
-						that.ticket = '';
-						that.repratio=ret.data.ratio?ret.data.ratio:0
-					}
-					if (that.repratio == 0) {
-						that.repratio = parseInt(ret.data.report_temp.ratio);
+						that.repratio = ret.data.ratio ? parseFloat(ret.data.ratio) : 0;
 					}
 
-					//
-					if (that.ticket == 0) {
-						that.ticket_color = "red";
+					if (that.ticket === 0) {
+						that.ticket_color = "blue";
 						that.ticket_name = "不含发票";
-					}
-					if (that.ticket == 1) {
+					} else if (that.ticket === 1) {
 						that.ticket_color = "blue";
 						that.ticket_name = "含普通发票";
-					}
-					if (that.ticket == 2) {
-						that.ticket_color = "black";
+					} else if (that.ticket === 2) {
+						that.ticket_color = "blue";
 						that.ticket_name = "含专用发票";
+					} else {
+						that.ticket_color = "blue";
+						that.ticket_name = "不含发票";
 					}
-					////
-				}).catch(err => {
-
-				});
+				}).catch(err => {});
 			}
 		}
 	}
 </script>
 
 <style scoped lang="scss">
-	.green {
-		color: green !important;
-	}
-
-	.red {
-		color: red !important;
-	}
-
-	.blue {
-		color: blue !important;
-	}
-
-	.footerFlex {
-		position: fixed;
-		bottom: 0px;
-		left: 0rpx;
-		width: 750rpx;
-	}
-
-	.uni-input {
-		flex: 1;
-		padding: 10rpx;
-		text-align: right;
-		font-size: 28rpx;
-		
-	}
-	.placeholder{
-		color: #a5a5a5;
-		font-size: 28rpx;
-	}
-
-	.uni-item {
-		display: flex;
-		align-items: center;
-		justify-content: space-between;
-		padding: 10rpx 20rpx;
-		color: #000000;
-		border-bottom: 1px solid #eee;
-	}
-	.moban{
-		
-		height: 35rpx;
-		padding-left: 10rpx;
-		padding-right: 10rpx;
-		background-color: #1677ff;
-		color: #ffffff;
-		text-align: center;
-		line-height: 35rpx;
-		border-radius: 10rpx;
-		font-size: 22rpx;
-		
-	}
-	.xzLogo{
-		height: 45rpx;
-		padding-left: 20rpx;
-		padding-right: 20rpx;
-		background-color: #1677ff;
-		color: #ffffff;
-		text-align: center;
-		border-radius: 10rpx;
-		line-height: 45rpx;
-		font-size: 22rpx;
-	}
-
-	.uni-label {
-		flex: 1;
-		
-	}
-
-	.uni-select {
-		border-radius: 5px;
-		padding: 10rpx;
-		text-align: right;
-	}
-
-	.uni-grid {
-		display: flex;
-		flex-direction: column;
-		flex-grow: 1;
-	}
-
-	.uni-row {
-		display: flex;
-	}
-
-	.uni-col {
-		flex: 1;
-		/* 让列平均分配宽度 */
+	.modern-report-page {
+		background-color: #f1f5f9;
+		min-height: 100vh;
 		padding: 20rpx;
-		/* 根据需要调整内边距 */
 		box-sizing: border-box;
+		font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+	}
+
+	.text-red { color: #dc2626 !important; }
+	.text-green { color: #16a34a !important; }
+	.text-gray { color: #64748b !important; }
+	.text-dark { color: #1e293b !important; }
+	.text-blue { color: #0284c7 !important; }
+
+	/* 产品规格、型号、电压等级的蓝色字体优化调整，采用更亮眼的鲜明亮蓝色 #2563eb */
+	.text-blue-bright {
+		color: #2563eb !important;
+		font-weight: 500 !important;
+	}
+
+	/* 商品名称文字颜色样式类，赋予醒目且有层次的现代化深色 #666666 兼具微粗体 */
+	.card-goods-name-styled {
+		color: #666666 !important;
+		font-weight: 600 !important;
+	}
+
+	.custom-blue-text {
+		color: #2563eb !important;
+		font-weight: 500 !important;
+	}
+
+	.custom-harmonized-text {
+		color: #2563eb !important;
+		font-weight: 500 !important;
+	}
+
+	.pop-label-red {
+		color: #38bdf8 !important;
+		font-weight: 600 !important;
+	}
+	.pop-input-red {
+		color: #dc2626 !important;
+		font-weight: bold !important;
+	}
+
+	.dock-title-black {
+		color: #1e293b !important;
+		font-weight: 500 !important;
+	}
+	.dock-val-red {
+		color: #dc2626 !important;
+		font-weight: bold !important;
+	}
+	.money-num-red {
+		color: #dc2626 !important;
+		font-weight: bold !important;
+		font-size: 34rpx !important;
+		margin-left: 6rpx;
+	}
+	.dock-content-red {
+		color: #dc2626 !important;
+	}
+
+	.tax-flag-badge {
+		padding: 2rpx 12rpx;
+		border-radius: 6rpx;
 		font-size: 20rpx;
-		border: 1rpx solid #dcdcdc;
+		font-weight: bold;
+		&.badge-none {
+			background: #f1f5f9;
+			color: #64748b;
+			border: 1rpx solid #cbd5e1;
+		}
+		&.badge-normal {
+			background: #eff6ff;
+			color: #2563eb;
+			border: 1rpx solid #bfdbfe;
+		}
+		&.badge-special {
+			background: #fff1f2;
+			color: #e11d48;
+			border: 1rpx solid #fecdd3;
+		}
 	}
 
-	/* 边框样式，你可能需要根据实际情况进行调整 */
-	.uni-col:not(:last-child) {
-		border-right: 1rpx solid #dcdcdc;
-		/* 给列右侧添加边框 */
+	.hero-control-header.amber-theme-box {
+		background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+		border: 1rpx solid #fde68a;
+		border-radius: 20rpx;
+		padding: 20rpx 24rpx;
+		box-shadow: 0 8rpx 20rpx -4rpx rgba(217, 119, 6, 0.12);
+		margin-bottom: 20rpx;
+
+		.header-title-row {
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			margin-bottom: 14rpx;
+
+			.main-label {
+				font-size: 26rpx;
+				font-weight: bold;
+				color: #92400e;
+			}
+
+			.stepper-box {
+				display: flex;
+				align-items: center;
+				background: #ffffff;
+				border-radius: 28rpx;
+				padding: 2rpx;
+				border: 1rpx solid #fcd34d;
+
+				.step-btn {
+					width: 44rpx;
+					height: 44rpx;
+					background: #fef3c7;
+					border-radius: 50%;
+					display: flex;
+					align-items: center;
+					justify-content: center;
+					font-size: 28rpx;
+					font-weight: bold;
+					color: #d97706;
+					box-shadow: 0 2rpx 6rpx rgba(217, 119, 6, 0.15);
+				}
+
+				.step-value {
+					padding: 0 20rpx;
+					font-size: 26rpx;
+					font-weight: bold;
+				}
+			}
+		}
+
+		.filter-capsule-row {
+			display: flex;
+
+			.capsule-pill.full-width-pill {
+				width: 100%;
+				background: #ffffff;
+				border: 1rpx solid #fde68a;
+				border-radius: 12rpx;
+				padding: 14rpx 20rpx;
+				display: flex;
+				align-items: center;
+				justify-content: space-between;
+				box-shadow: 0 2rpx 6rpx rgba(0, 0, 0, 0.02);
+
+				.pill-left-group {
+					.pill-key {
+						font-size: 24rpx;
+						color: #78350f;
+						font-weight: bold;
+					}
+				}
+
+				.pill-right-group {
+					display: flex;
+					align-items: center;
+					gap: 8rpx;
+
+					.pill-val {
+						font-size: 24rpx;
+						color: #b45309;
+						font-weight: bold;
+					}
+				}
+			}
+		}
 	}
 
-	.uni-row:not(:last-child) .uni-col {
-		border-bottom: 1rpx solid #dcdcdc;
-		/* 给行底部的列添加边框 */
+	.product-stream-section {
+		margin-bottom: 20rpx;
+
+		.section-heading {
+			display: flex;
+			justify-content: space-between;
+			align-items: center;
+			margin-bottom: 14rpx;
+			padding: 0 6rpx;
+
+			.sec-title {
+				font-size: 26rpx;
+				font-weight: bold;
+				color: #1e293b;
+			}
+
+			.sec-count {
+				font-size: 22rpx;
+				color: #64748b;
+			}
+		}
+
+		.empty-state {
+			background: #ffffff;
+			border-radius: 20rpx;
+			padding: 30rpx;
+			text-align: center;
+			color: #94a3b8;
+			font-size: 26rpx;
+			box-shadow: 0 8rpx 20rpx rgba(0, 0, 0, 0.04);
+		}
+
+		.floating-card-item {
+			border-radius: 20rpx;
+			padding: 20rpx 24rpx;
+			margin-bottom: 40rpx;
+			box-shadow: 0 8rpx 24rpx rgba(100, 116, 139, 0.12);
+			display: flex;
+			flex-direction: column;
+			gap: 12rpx;
+			transition: all 0.2s ease;
+
+			&.card-odd {
+				background-color: #ffffff;
+				border: 1rpx solid #cbd5e1;
+				box-shadow: 0 6rpx 20rpx rgba(100, 116, 139, 0.08);
+			}
+			&.card-even {
+				background-color: #f1f5f9;
+				border: 1rpx solid #94a3b8;
+				box-shadow: 0 6rpx 20rpx rgba(100, 116, 139, 0.15);
+			}
+
+			.card-header-bar-custom {
+				background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+				padding: 10rpx 14rpx;
+				border-radius: 12rpx;
+				border: 1rpx solid #cbd5e1;
+
+				.item-index-badge-custom {
+					font-size: 24rpx;
+					font-weight: 800;
+					color: #0f172a;
+					background: #ffffff;
+					padding: 4rpx 12rpx;
+					border-radius: 8rpx;
+					border: 1rpx solid #cbd5e1;
+					box-shadow: 0 2rpx 4rpx rgba(0,0,0,0.03);
+				}
+			}
+
+			.sketch-row-1 {
+				display: flex;
+				justify-content: space-between;
+				align-items: center;
+				padding-bottom: 10rpx;
+				border-bottom: 1rpx dashed #cbd5e1;
+
+				.index-slot {
+					flex: 1;
+					display: flex;
+					align-items: center;
+				}
+
+				.center-pill-slot {
+				    flex: 1;
+				    display: flex;
+				    justify-content: center;
+				    align-items: center;
+				    margin-left: -170rpx;
+
+					.mini-ratio-pill-top {
+						font-size: 20rpx;
+						font-weight: bold;
+						padding: 2rpx 10rpx;
+						border-radius: 6rpx;
+						height: 32rpx;
+						line-height: 32rpx;
+						display: inline-flex;
+						align-items: center;
+						justify-content: center;
+
+						&.pill-red-solid {
+							background: #dc2626;
+							color: #ffffff;
+						}
+						&.pill-green-solid {
+							background: #16a34a;
+							color: #ffffff;
+						}
+						&.pill-gray-solid {
+							background: #64748b;
+							color: #ffffff;
+						}
+					}
+				}
+
+				.right-action-slot {
+					flex: 1;
+					display: flex;
+					justify-content: flex-end;
+					align-items: center;
+					gap: 50rpx;
+
+					.batch-adjust-btn-custom-subtle {
+						background: #f8fafc;
+						border: 1rpx solid #cbd5e1;
+						padding: 4rpx 16rpx;
+						border-radius: 12rpx;
+						display: flex;
+						align-items: center;
+						gap: 4rpx;
+						flex-shrink: 0;
+
+						.adjust-txt-custom {
+							font-size: 22rpx;
+							color: #475569;
+							font-weight: 500;
+							white-space: nowrap;
+						}
+					}
+
+					.del-icon-btn {
+						font-size: 38rpx;
+						color: #94a3b8;
+						padding: 0 4rpx;
+						line-height: 1;
+					}
+				}
+			}
+
+			.card-title-section-inline {
+				display: flex;
+				align-items: baseline;
+				padding: 4rpx 0 4rpx 16rpx;
+				gap: 4rpx;
+				margin: 0;
+
+				.card-title-header-label {
+					font-size: 24rpx;
+					font-weight: 600;
+					color: #64748b;
+					flex-shrink: 0;
+				}
+
+				.card-goods-name {
+					font-size: 26rpx;
+					line-height: 1.4;
+					flex: 1;
+				}
+			}
+
+			.card-attr-grid {
+				display: flex;
+				flex-direction: column;
+				gap: 10rpx;
+				background: #ffffff;
+				padding: 14rpx 16rpx;
+				border-radius: 12rpx;
+				border: 1rpx solid #e2e8f0;
+
+				.attr-row-flex {
+					display: flex;
+					align-items: center;
+					justify-content: space-between;
+					gap: 16rpx;
+					width: 100%;
+
+					.attr-col-item {
+						display: flex;
+						align-items: center;
+						font-size: 24rpx;
+						flex: 1;
+						overflow: hidden;
+
+						.attr-label {
+							color: #64748b;
+							font-weight: 600;
+							flex-shrink: 0;
+						}
+
+						.attr-val {
+							flex: 1;
+						}
+					}
+				}
+
+				.attr-row-item-full {
+					display: flex;
+					align-items: center;
+					font-size: 24rpx;
+					width: 100%;
+
+					.attr-label {
+						color: #64748b;
+						font-weight: 600;
+						flex-shrink: 0;
+						width: 130rpx;
+					}
+
+					.attr-val {
+						flex: 1;
+					}
+				}
+			}
+
+			.card-financial-dock {
+				display: flex;
+				justify-content: space-between;
+				align-items: center;
+				background: #fff;
+				border: 1rpx solid #fef3c7;
+				background: linear-gradient(135deg, #fffdf4 0%, #fffbeb 100%);
+				padding: 14rpx 18rpx;
+				border-radius: 12rpx;
+				margin-top: 4rpx;
+
+				.fin-item {
+					display: flex;
+					align-items: center;
+					font-size: 24rpx;
+					flex-shrink: 0;
+					white-space: nowrap;
+
+					.fin-label {
+						color: #78350f;
+						font-weight: 600;
+						margin-right: 4rpx;
+					}
+
+					.fin-num-bold {
+						color: #1e293b;
+						font-weight: bold;
+						font-size: 26rpx;
+					}
+
+					.fin-price-unit {
+						font-weight: bold;
+						font-size: 26rpx;
+					}
+
+					&.subtotal-alignment {
+						.fin-subtotal-red {
+							color: #e11d48;
+							font-weight: 800;
+							font-size: 28rpx;
+						}
+					}
+				}
+			}
+
+			.ellipsis-text {
+				overflow: hidden;
+				text-overflow: ellipsis;
+				white-space: nowrap;
+				cursor: pointer;
+			}
+		}
 	}
 
-	/* 文本颜色样式 */
-	.red-text {
-		color: red;
-		/* 红色表示价格上涨 */
+	.floating-section-card {
+		background: #ffffff;
+		border-radius: 20rpx;
+		padding: 4rpx 24rpx;
+		margin-bottom: 20rpx;
+		box-shadow: 0 8rpx 20rpx rgba(148, 163, 184, 0.08);
+		border: 1rpx solid #e2e8f0;
+
+		&.compact-remark-card {
+			padding-bottom: 12rpx;
+
+			.textarea-box {
+				padding: 8rpx 0 10rpx 0;
+
+				.modern-textarea.auto-grow-textarea {
+					width: 100%;
+					min-height: 72rpx;
+					max-height: 240rpx;
+					background: #f8fafc;
+					border: 1rpx solid #e2e8f0;
+					border-radius: 12rpx;
+					padding: 12rpx 16rpx;
+					box-sizing: border-box;
+					font-size: 26rpx;
+					color: #334155;
+					line-height: 1.4;
+				}
+			}
+		}
+
+		.form-group-title {
+			font-size: 24rpx;
+			font-weight: bold;
+			color: #b45309;
+			padding: 18rpx 0 10rpx 0;
+			border-bottom: 1rpx solid #fef3c7;
+			margin-bottom: 4rpx;
+
+			&.header-row-flex {
+				display: flex;
+				justify-content: space-between;
+				align-items: center;
+
+				.template-header-actions {
+					display: flex;
+					gap: 12rpx;
+					align-items: center;
+				}
+
+				.template-badge-btn {
+					font-size: 22rpx;
+					padding: 6rpx 16rpx;
+					border-radius: 16rpx;
+					font-weight: bold;
+					box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.1);
+
+					/* 琥珀金：代表报价体系主体 */
+					&.amber-btn {
+						background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+						color: #ffffff;
+					}
+
+					/* 商务蓝：代表询价体系主体 */
+					&.blue-btn {
+						background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+						color: #ffffff;
+					}
+				}
+			}
+		}
+
+		.modern-form-item {
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			padding: 18rpx 0;
+			border-bottom: 1rpx solid #f8fafc;
+
+			&:last-child {
+				border-bottom: none;
+			}
+
+			&.clickable-item {
+				cursor: pointer;
+			}
+
+			.form-label {
+				font-size: 26rpx;
+				color: #334155;
+				flex-shrink: 0;
+				font-weight: 500;
+			}
+
+			.picker-value-box {
+				flex: 1;
+				display: flex;
+				justify-content: flex-end;
+				align-items: center;
+				gap: 8rpx;
+
+				.val-text {
+					font-size: 26rpx;
+					color: #d97706;
+					font-weight: bold;
+				}
+			}
+
+			.modern-input {
+				flex: 1;
+				text-align: right;
+				font-size: 26rpx;
+				color: #334155;
+			}
+		}
 	}
 
-	.green-text {
-		color: green;
-		/* 绿色表示价格下跌 */
+	.input-placeholder-light {
+		color: #adb5bd !important;
+		font-weight: normal;
 	}
 
-	.black-text {
-		color: black;
-		/* 黑色表示价格不变 */
+	.bottom-spacer {
+		height: 380rpx;
 	}
 
-	.red-text {
-		color: red;
-	}
-
-	.green-text {
-		color: green;
-	}
-
-	.black-text {
-		color: black;
-	}
-
-	.custom-table {
+	.floating-checkout-dock {
+		position: fixed;
+		bottom: 0;
+		left: 0;
+		right: 0;
 		width: 100%;
+		max-width: 750rpx;
+		margin: 0 auto;
+		background: #ffffff;
+		box-shadow: 0 -12rpx 35rpx rgba(0, 0, 0, 0.08);
+		border-radius: 28rpx 28rpx 0 0;
+		z-index: 99;
+		padding: 20rpx 28rpx calc(20rpx + env(safe-area-inset-bottom)) 28rpx;
+		box-sizing: border-box;
 
+		.dock-summary-info {
+			background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+			border-radius: 16rpx;
+			padding: 14rpx 20rpx;
+			margin-bottom: 14rpx;
+			border: 1rpx solid #fde68a;
+
+			.sum-row-top {
+				display: flex;
+				justify-content: space-between;
+				align-items: center;
+				font-size: 22rpx;
+				margin-bottom: 6rpx;
+			}
+
+			.sum-row-bottom {
+				margin-bottom: 2rpx;
+				.total-money-label {
+					font-size: 24rpx;
+					font-weight: bold;
+				}
+			}
+
+			.sum-row-words {
+				.chinese-words {
+					font-size: 20rpx;
+				}
+			}
+		}
+
+		.dock-actions-row {
+			display: flex;
+			gap: 16rpx;
+			margin-bottom: 8rpx;
+
+			button {
+				flex: 1;
+				height: 76rpx;
+				border-radius: 16rpx;
+				font-size: 26rpx;
+				font-weight: bold;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				border: none;
+			}
+
+			.btn-clear {
+				background: #f1f5f9;
+				color: #64748b;
+			}
+
+			.btn-submit {
+				background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+				color: #ffffff;
+				box-shadow: 0 4rpx 12rpx rgba(217, 119, 6, 0.25);
+				letter-spacing: 1rpx;
+			}
+		}
+
+		.dock-tips {
+			text-align: center;
+			font-size: 18rpx;
+			color: #94a3b8;
+		}
 	}
 
-	.custom-table .table-row {
+	.custom-modal-mask {
+		position: fixed;
+		top: 0;
+		left: 0;
+		right: 0;
+		bottom: 0;
+		background: rgba(15, 23, 42, 0.5);
+		backdrop-filter: blur(4px);
+		z-index: 999;
 		display: flex;
-		height: 100%;
-
-	}
-
-	.goods_line_item .select-icon {
-		height: 100% !important;
-	}
-
-
-
-
-	.custom-table .xuhao {
-		width: 100rpx;
-		flex-shrink: 0;
-		display: flex;
-		font-size: 20rpx;
 		align-items: center;
 		justify-content: center;
-		flex-direction: column;
-		//border: 1px solid #333333;
-		border-bottom: 1rpx solid #dcdcdc;
-		border-top: 1rpx solid #dcdcdc;
-		/* 使用父的高度*/
+
+		.custom-modal-container {
+			width: 600rpx;
+			background: #ffffff;
+			border-radius: 28rpx;
+			padding: 40rpx 32rpx 32rpx 32rpx;
+			box-sizing: border-box;
+			box-shadow: 0 25rpx 50rpx -12rpx rgba(0, 0, 0, 0.25);
+			border: 1rpx solid #e2e8f0;
+
+			/* 宽体弹窗宽度扩宽至 720rpx 左右，为按钮留出充裕空间 */
+			&.wide-modal-container {
+				width: 720rpx;
+				max-height: 82vh;
+				display: flex;
+				flex-direction: column;
+			}
+
+			.custom-modal-title {
+				font-size: 32rpx;
+				font-weight: bold;
+				color: #1e293b;
+				text-align: center;
+				margin-bottom: 8rpx;
+			}
+
+			.sub-modal-desc {
+				font-size: 22rpx;
+				color: #94a3b8;
+				text-align: center;
+				margin-bottom: 24rpx;
+			}
+
+			.add-template-input-row {
+				display: flex;
+				gap: 12rpx;
+				margin-bottom: 20rpx;
+
+				.modal-inline-input {
+					flex: 1;
+					height: 72rpx;
+					background: #f8fafc;
+					border: 1rpx solid #e2e8f0;
+					border-radius: 12rpx;
+					padding: 0 20rpx;
+					font-size: 26rpx;
+					color: #334155;
+				}
+
+				.inline-add-btn {
+					width: 160rpx;
+					height: 72rpx;
+					background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+					color: #ffffff;
+					font-size: 24rpx;
+					font-weight: bold;
+					border-radius: 12rpx;
+					display: flex;
+					align-items: center;
+					justify-content: center;
+					border: none;
+					flex-shrink: 0;
+				}
+			}
+
+			.template-items-scroll {
+				max-height: 440rpx;
+				width: 100%;
+				box-sizing: border-box;
+
+				.empty-quick-tips {
+					text-align: center;
+					color: #94a3b8;
+					font-size: 24rpx;
+					padding: 40rpx 0;
+				}
+
+				.template-manage-card {
+					background: #f8fafc;
+					border: 1rpx solid #e2e8f0;
+					border-radius: 16rpx;
+					padding: 20rpx;
+					margin-bottom: 16rpx;
+
+					.manage-card-body {
+						cursor: pointer;
+						margin-bottom: 14rpx;
+
+						.card-mini-indicator {
+							display: flex;
+							align-items: center;
+							gap: 6rpx;
+							margin-bottom: 8rpx;
+
+							.dot-icon {
+								width: 10rpx;
+								height: 10rpx;
+								background: #d97706;
+								border-radius: 50%;
+							}
+
+							.indicator-title {
+								font-size: 20rpx;
+								color: #b45309;
+								font-weight: bold;
+							}
+						}
+
+						.manage-item-text {
+							font-size: 26rpx;
+							color: #334155;
+							line-height: 1.5;
+							word-break: break-all;
+						}
+					}
+
+					.manage-card-footer {
+						display: flex;
+						justify-content: flex-end;
+						gap: 10rpx;
+						border-top: 1rpx dashed #e2e8f0;
+						padding-top: 12rpx;
+
+						.action-btn-pill {
+							padding: 8rpx 20rpx;
+							border-radius: 10rpx;
+							font-size: 22rpx;
+							font-weight: bold;
+							display: flex;
+							align-items: center;
+
+							&.use-pill {
+								background: #fffbeb;
+								color: #b45309;
+								border: 1rpx solid #fde68a;
+							}
+
+							&.del-pill {
+								background: #fef2f2;
+								color: #ef4444;
+								border: 1rpx solid #fecaca;
+							}
+						}
+					}
+				}
+			}
+
+			.custom-modal-content {
+				font-size: 28rpx;
+				color: #475569;
+				text-align: center;
+				line-height: 1.5;
+				margin-bottom: 40rpx;
+				padding: 0 10rpx;
+
+				&.detail-content-box {
+					text-align: left;
+					word-break: break-all;
+					max-height: 300rpx;
+					overflow-y: auto;
+					background: #f8fafc;
+					padding: 16rpx;
+					border-radius: 12rpx;
+					border: 1rpx solid #e2e8f0;
+					color: #1e293b;
+				}
+			}
+
+			.custom-modal-footer {
+				display: flex;
+				gap: 20rpx;
+
+				.c-modal-btn {
+					flex: 1;
+					height: 80rpx;
+					border-radius: 16rpx;
+					font-size: 28rpx;
+					font-weight: bold;
+					display: flex;
+					align-items: center;
+					justify-content: center;
+					border: none;
+				}
+
+				.c-btn-cancel {
+					background: #f1f5f9;
+					color: #64748b;
+				}
+
+				.c-btn-confirm {
+					background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+					color: #ffffff;
+					box-shadow: 0 6rpx 16rpx rgba(217, 119, 6, 0.3);
+				}
+			}
+		}
 	}
 
-	.custom-table .foot {
-		width: 100%;
-		height: 120rpx;
-		display: flex;
+	.slot-content {
 		padding: 20rpx;
-		align-items: center;
+		.modal-input {
+			background: #f8fafc;
+			border: 1rpx solid #e2e8f0;
+			border-radius: 12rpx;
+			padding: 20rpx;
+			font-size: 26rpx;
+			color: #334155;
+		}
 	}
 
-	.ltr-textarea {
-		direction: ltr;
-		/* Left-to-Right direction */
-		text-align: left !important;
-	}
-
-
-
-
-
-	.select-ios .select-placeholder {
-		color: #000000;
-	}
-
-	.ceilNumb {
-		background: #f8f8f8;
-		font-size: 30rpx;
-		text-align: center;
-		padding: 1rem 24rpx 1rem 56rpx;
-	}
-
-	.ceilNumb span {
-		background: white;
-		border: 1px solid #e5e5e5;
-		color: #333333;
-		display: inline-block;
-		font-size: 44rpx;
-		height: 60rpx;
-		line-height: 60rpx;
-		margin-top: -10rpx;
-		vertical-align: top;
-		text-align: center;
-		width: 60rpx;
-	}
-
-	.ceilNumb span.value {
-		color: black;
-		font-size: 24rpx;
-		margin-left: -6rpx;
-		width: 100rpx;
-	}
-
-	.ceilNumb input {
-		border: 2rpx solid #e5e5e5;
-		color: black;
-		display: inline-block;
-		font-size: 24rpx;
-		height: 60rpx;
-		line-height: 60rpx;
-		margin: -10rpx 0rem 0rem 2rpx;
-		vertical-align: middle;
-		text-align: center;
-		width: 100rpx;
-	}
-
-	.ceilNumb span:first-child {
-		margin-right: -10rpx;
-	}
-
-	.ceilNumb span:last-child {
-		margin-left: -8rpx;
-	}
-
-	.goods_line {
-		display: flex;
-	}
-
-	.goods_line .red {
-		color: #c20f22;
-	}
-
-	.goods_line .blue {
-		color: #4a90e2;
-	}
-
-	.goods_line .black {
-		color: black;
-	}
-
-	.goods {
-		border-top: 2rpx solid #dcdcdc;
-		//border-bottom: 1px solid #dcdcdc;
-	}
-
-	.goods_line_item {
-		border-right: 2rpx solid #dcdcdc;
-		//border-bottom: 1px solid #eeeeee;
+	.amber-popup-card-box {
+		background: #ffffff;
+		border-radius: 24rpx;
+		padding: 28rpx 24rpx;
+		width: 560rpx;
+		max-width: 88vw;
 		box-sizing: border-box;
-		font-size: 20rpx;
-		flex: 1;
-		min-height: 96rpx;
-		line-height: 96rpx;
-		text-align: center;
+		box-shadow: 0 20rpx 40rpx rgba(0, 0, 0, 0.18);
+		border: 1rpx solid #e2e8f0;
+
+		.popup-title {
+			font-size: 28rpx;
+			font-weight: bold;
+			text-align: center;
+			margin-bottom: 20rpx;
+			color: #1e293b;
+		}
+
+		.popup-form-item {
+			display: flex;
+			justify-content: space-between;
+			align-items: center;
+			margin-bottom: 16rpx;
+			font-size: 24rpx;
+			color: #475569;
+			background: #f8fafc;
+			padding: 8rpx 12rpx;
+			border-radius: 10rpx;
+			border: 1rpx solid #f1f5f9;
+
+			.pop-label {
+				overflow: hidden;
+				text-overflow: ellipsis;
+				white-space: nowrap;
+				flex: 1;
+				margin-right: 10rpx;
+				color: #334155;
+				font-weight: 500;
+			}
+
+			.amber-mini-btn {
+				background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+				color: #ffffff;
+				font-size: 20rpx;
+				padding: 4rpx 16rpx;
+				border-radius: 8rpx;
+				font-weight: bold;
+				flex-shrink: 0;
+			}
+
+			.popup-stepper {
+				display: flex;
+				align-items: center;
+				background: #ffffff;
+				border-radius: 8rpx;
+				overflow: hidden;
+				flex-shrink: 0;
+				border: 1rpx solid #e2e8f0;
+
+				span {
+					width: 40rpx;
+					height: 40rpx;
+					display: flex;
+					align-items: center;
+					justify-content: center;
+					background: #f8fafc;
+					font-weight: bold;
+					font-size: 24rpx;
+					color: #64748b;
+				}
+
+				input, .pop-val-text {
+					width: 72rpx;
+					text-align: center;
+					font-size: 24rpx;
+					color: #1e293b;
+					font-weight: bold;
+				}
+			}
+		}
+
+		.popup-calc-preview {
+			background: #fffbeb;
+			border: 1rpx solid #fef3c7;
+			padding: 12rpx;
+			border-radius: 10rpx;
+			text-align: center;
+			font-size: 24rpx;
+			color: #92400e;
+			margin-bottom: 20rpx;
+
+			.preview-price {
+				color: #d97706;
+				font-weight: bold;
+				font-size: 28rpx;
+				margin-left: 6rpx;
+			}
+		}
+
+		/* 底部按钮栏均分排布优化（保存、重置、删除、取消四按钮横向平铺，间距更协调） */
+		.popup-buttons-row {
+			display: flex;
+			gap: 8rpx;
+			justify-content: space-between;
+			width: 100%;
+			box-sizing: border-box;
+
+			.amber-pop-btn {
+				flex: 1;
+				height: 68rpx;
+				border-radius: 12rpx;
+				font-size: 22rpx;
+				font-weight: bold;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				border: none;
+				padding: 0 4rpx;
+
+				&.confirm-btn {
+					background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+					color: #ffffff;
+					box-shadow: 0 4rpx 10rpx rgba(217, 119, 6, 0.25);
+				}
+
+				&.reset-btn {
+					background: #f8fafc;
+					color: #d97706;
+					border: 1rpx solid #fde68a;
+				}
+
+				&.delete-btn {
+					background: #fef2f2;
+					color: #ef4444;
+					border: 1rpx solid #fecaca;
+				}
+
+				&.cancel-btn {
+					background: #f1f5f9;
+					color: #64748b;
+				}
+			}
+		}
 	}
 
-	.goods_line_item.title {
-		font-size: 28rpx;
-	}
-
-	.goods_line_item.mrleft {
-		margin-left: 0px;
-	}
-
-	.goods_line_item.nobor {
-		border-right: 0px;
-	}
-
-	.goods_line_item .select-ios {
-		padding: 0px;
-		text-align: center;
-	}
-
-	.goods_line_item .item-ios.item-block .item-inner {
-		border: 0px;
-	}
-
-	.goods_line_item .select-icon {
-		margin-right: 20rpx;
-	}
-
-	.goods_line_imsr {
-		border-right: 1px solid #dcdcdc;
-		border-bottom: 1px solid #dcdcdc;
-		box-sizing: border-box;
-		flex: 4;
-		font-size: 16rpx;
-		min-height: 96rpx;
-		line-height: 48rpx;
-		padding-left: 10rpx;
-		text-align: left;
-	}
-
-	.goods_line_imsr.size {
-		line-height: 96rpx;
-		text-align: center;
-	}
-
-	.goods_line_imse {
-		border-bottom: 2rpx solid #dcdcdc;
-		box-sizing: border-box;
-		flex: 2;
-		font-size: 20rpx;
-		min-height: 96rpx;
-		line-height: 96rpx;
-		text-align: center;
-	}
-
-	.totals {
-		background: #fffad8;
-		padding: 8rpx 8rpx 20rpx 20rpx;
-	}
-
-	.totals p {
-		font-size: 24rpx;
-		margin: 0rem;
-		padding-top: 10rpx;
-	}
-
-	.totals p span {
-		color: #d0021b;
-	}
-
-	.totals p span.blue {
-		color: #1677ff;
-	}
-
-	.totals p span.red {
-		color: #c20f22;
-	}
-
-	.totals p span.black {
-		color: black;
-	}
-
-	.rep_tags {
-		background: #4a90e2;
-		box-sizing: border-box;
-		color: white;
-		font-size: 24rpx;
-		height: 80rpx;
-		display: flex;
-		align-items: center;
-
-		//margin-top: 2rem;
-		//padding: 0.6rem 1.2rem;
-	}
-
-	.ticket_color {
-		background: #f8bebe;
-	}
-
-	.rep_tags2 {
-		margin-top: 0rem;
-	}
-
-	ion-list {
-		background: #f8f8f8;
-	}
-
-	.select-ios {
-		flex: 1;
-		text-align: right;
-	}
-
-	.item-ios {
-		padding-left: 0px;
-	}
-
-	.item-inner {
-		font-size: 30rpx;
-	}
-
-	.text-input {
-		position: relative;
-		text-align: right;
-	}
-
-	.text-input::after {
-		display: table;
-		content: ">";
-		height: 1rem;
-		position: absolute;
-		top: 0rem;
-		right: 0rem;
-		width: 20rpx;
-	}
-
-	.item-input ion-label {
-		margin-left: 24rpx;
-	}
-
-	.list-ios .item-block .item-inner {
-		border-bottom: 2rpx solid #dcdcdc;
-	}
-
-	.list-ios>.item-block:first-child {
-		border-top: 0px;
-	}
-
-	.list-ios>.item-block:last-child {
-		border-bottom: 2rpx solid #dcdcdc;
-	}
-
-	.item-select ion-label {
-		margin-left: 24rpx;
-	}
-
-	textarea.text-input {
-		height: 100rpx;
-	}
-
-	.footer_bg {
-		background: #f8f8f8;
-		height: 48rpx;
-	}
-
-	.footer {
-		//padding: 1.6rem 1.2rem;
-	}
-
-	.footer button {
-		background: #c20f22;
-		border-radius: 4rpx;
-		display: block;
-		font-size: 24rpx;
-		color: white;
-		height: 60rpx;
-		line-height: 60rpx;
-		width: 100%;
-	}
-
-	.footer button:last-child {
-		background: white;
-		border: 1px solid #c20f22;
-		color: #c20f22;
-
-	}
-
-	.mask {
-		bottom: 0rem;
-		background: black;
-		opacity: 0.3;
-		position: fixed;
-		top: 0rem;
-		width: 100%;
-		z-index: 10;
-	}
-
-	.mark_body {
-		background: white;
-		border-radius: 30rpx;
-		padding: 30rpx 0rem;
-		width: 690rpx;
-		display: flex;
-		align-items: center;
-		flex-direction: column;
-	}
-
-	.mark_body_footer {
-		border-top: 1px solid #999;
-		display: flex;
-		padding-top: 40rpx;
-		text-align: center;
-	}
-
-	.mark_body_footer-item {
-		flex: 1;
-	}
-
-	.mark_body_footer-item.red {
-		color: #c20f22;
+	@media screen and (min-width: 768px) {
+		.modern-report-page {
+			max-width: 750rpx;
+			margin: 0 auto;
+			box-shadow: 0 0 20rpx rgba(0, 0, 0, 0.05);
+		}
+		
+		.floating-checkout-dock {
+			width: 750rpx !important;
+			left: 50% !important;
+			transform: translateX(-50%);
+		}
 	}
 </style>

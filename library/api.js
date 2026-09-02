@@ -112,9 +112,6 @@ class Ht{
 		return http.post("Order/oinfo_fixd.html",data)
 	}
 	
-	uaddr_list(data){
-		return http.post("Users/uaddr_list.html",data)
-	}
 	addr_addon(data){
 		return http.post("Users/uaddr_addon.html",data)
 	}
@@ -256,91 +253,19 @@ class Ht{
 	checkArea(data){
 		return http.post("index/checkArea",data)
 	}
-	
-	
 
-
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
+    // --- AI 助手扩展接口 (精准匹配宝塔后台 AiController.class.php) ---
+    	aiChat(data){
+    		return http.post("Ai/runAiChat", data)
+    	}
+    	getAiKnowledge(data){
+    		return http.post("Ai/getKnowledgeList", data)
+    	}
+    	aiTts(data){
+    		return http.post("Ai/testTtsSynthesis", data)
+    	}
+    	getAiQuoteList(data){
+    		return http.post("Ai/getQuoteList", data)
+    	}
 }
 export default new Ht()

@@ -1,171 +1,168 @@
 <template>
-	<view>
-		<view class="logo" style="width: 100vw;height:200rpx;" v-if="infos.logo">
-			<image style="width: 750rpx;height: 107rpx;" :src="infos.logo" />
+	<view class="modern-report-page">
+		<!-- 头部 Logo 区域 -->
+		<view class="logo-box" v-if="infos.logo">
+			<image class="logo-img" mode="aspectFit" :src="infos.logo" />
 		</view>
-		<view class="ceilNumb" style="display: flex;align-items: center;justify-content: center;">
-			全部商品统一比例调整:
-			<view  :class="infos.ratio>0 ? 'red' :infos.ratio<0?'green':infos.ratio==0?'black':''"
-				class="ceilNumb_value">{{infos.ratio }}%</view>
-		</view>
-		<view class="goods">
-			<view class="goods_line">
-				<view style="font-size: 22rpx;color: red;" class="goods_line_item title mrleft">
-					质量标准：{{infos.trans_bids}}
+		
+		<!-- 顶部看板：统调比例与商品税率双区块展示 (同步Data风格) -->
+		<view class="hero-control-header amber-theme-box">
+			<view class="header-title-row">
+				<text class="main-label">全品统一调价比例</text>
+				<view class="stepper-box">
+					<text :class="['step-value', (infos.ratio > 0 || ratioVal > 0) ? 'text-red' : (infos.ratio < 0 || ratioVal < 0) ? 'text-green' : 'text-gray']">
+						{{ (infos.ratio !== undefined && infos.ratio !== null && infos.ratio !== '') ? ((infos.ratio > 0 ? '+' + infos.ratio : infos.ratio) + '%') : '0%' }}
+					</text>
 				</view>
-				<view style="font-size: 22rpx;color: red;" class="goods_line_item title nobor">是否含税：{{ratio}}</view>
 			</view>
 
-			<view class="custom-table" style="margin-bottom: 30rpx" v-for="(item,i) in list">
-				<view class="d_a w_100" style="flex-direction: row;align-items: stretch;">
-					<view class="xuhao">
-						<p>序号</p>
-						<p>{{ item.sort }}</p>
+			<!-- 发票通栏选择胶囊 -->
+			<view class="filter-capsule-row">
+				<view class="capsule-pill full-width-pill">
+					<view class="pill-left-group">
+						<text class="pill-key">发票税率控制</text>
 					</view>
-					<view class="uni-grid">
-						<view class="uni-row">
-							<view class="uni-col" style="border-bottom: none; border-right: none;">
-								{{ item.attr1 }}
-							</view>
-							<view class="uni-col" style="border-bottom: none;">
-								{{ item.attr2 }}
-							</view>
-						</view>
-						<view class="uni-row">
-							<view class="uni-col" style="border-bottom: none; border-right: none;">
-								{{ item.attr3 }}
-							</view>
-							<view class="uni-col" style="border-bottom: none;background-color: yellow;color: blue;">
-								产品数量:{{ item.nums }}（{{ item.unit }}）
-							</view>
-						</view>
-						<view class="uni-row">
-							<view class="uni-col" style="border-right: none;background-color: yellow;color: blue;">
-								产品价格:{{ item.price?item.price:0 }}元
-								<text
-									:class="{'red-text': item.up > 0, 'green-text': item.up < 0, 'black-text': item.up === 0}"
-									style="margin-left: 1rem">
-									( {{item.up>0 ? '+' : ''}} {{ item.up }}%)
-								</text>
-							</view>
-							<view class="uni-col" style="background-color: yellow;color: blue;">
-								合计金额:{{ item.total<0 ? 0 : item.total }}元
-							</view>
-						</view>
+					<view class="pill-right-group">
+						<text class="pill-val">{{ actualTaxText }}</text>
 					</view>
 				</view>
 			</view>
-			<view class="rep_tags">
-				<span style="margin-left: 30rpx">报价单备注信息</span>
-			</view>
-
-			<view class="uni-item">
-				<text class="uni-label">付款方式</text>
-				<view class="uni-select" >
-					{{ infos.check_type }}
-				</view>
-			</view>
-			<view class="uni-item">
-				<text class="uni-label">运输方式</text>
-				<view class="uni-select">
-					{{ infos.trans_type }}
-				</view>
-			</view>
-			<view class="uni-item">
-				<text class="uni-label">运输费用</text>
-				<view class="uni-select">
-					{{ infos.fees_out }}
-				</view>
-			</view>
-
-			<view class="uni-item">
-				<text class="uni-label">包装选项</text>
-				<view class="uni-select">
-					{{ infos.pack_recyle }}
-				</view>
-			</view>
-			
-			<view class="uni-item">
-				<text class="uni-label">报价单位（选填）</text>
-				<view class="uni-select">
-					{{ infos.rep_comp }}
-				</view>
-			</view>
-
-			<view class="uni-item">
-				<text class="uni-label">询价单位（选填)</text>
-				<view class="uni-select">
-					{{ infos.question_comp }}
-				</view>
-			</view>
-
-			<view class="uni-item">
-				<text class="uni-label">项目名称（选填）</text>
-				<view class="uni-select">
-					{{ infos.project_comp  }}
-				</view>
-			</view>
-			
-			
-			<view class="uni-item">
-				<text class="uni-label">报价人员（选填）</text>
-				<view class="uni-select">
-					{{ infos.rep_user  }}
-				</view>
-			</view>
-
-			
-
-			<view class="uni-item">
-				<text class="uni-label">联系方式（选填）</text>
-				<view class="uni-select">
-					{{ infos.rep_user }}
-				</view>
-			</view>
-
-			<view class="" style="color: blue;padding: 10rpx 20rpx;">
-				<text style="flex-shrink: 0;margin-left: 30rpx;font-size: 26rpx;">报价单备注:</text>
-				<view  style="display: flex;align-items: center;margin-top: 10rpx;font-size: 26rpx;">
-					<text  space="nbsp">{{ infos.tags }}</text>
-					<!-- <rich-text :nodes="infos.tags"></rich-text> -->
-				</view>
-			</view>
-
 		</view>
-            
-		<view class="totals">
-			<p>
-				<text>商品总条数：{{ list.length }} </text>
-				<text style="margin-left: 20rpx;">合计数量：{{count}}</text>
-			</p>
 
-			<p>合计总金额：<span>{{total}}</span>元</p>
-			<p>总金额大写：<span style=" color: #1677ff;">{{total_n}}</span></p>
-			<p>订单税率标识：{{ratio}}</p>
-		</view>
-		<view class="footers d_a_j" style="margin-top: 30rpx;">
-			<image mode="widthFix" src="/static/imgs/login_footer2.png" />
-		</view>
-		<view style="height: 200rpx;"></view>
-		<view class="fenxiang ">
-			<view class="item" @click="shareBg()">
-				<image mode="widthFix" src="/static/imgs/biaoge.png" />
-				<p>生成表格</p>
+		<!-- 商品列表明细区域 -->
+		<view class="product-stream-section">
+			<view class="section-heading">
+				<text class="sec-title">报价商品清单</text>
+				<text class="sec-count">共 {{ list ? list.length : 0 }} 项</text>
 			</view>
-			<view class="item" @click="shareImage()">
-				<image mode="widthFix" src="/static/imgs/tupian.png" />
-				<p>生成图片</p>
-			</view>
-			<view class="item" @click="sharetoWechat()">
-				<image mode="widthFix" src="/static/imgs/weixin.png" />
-				<p>微信分享</p>
-			</view>
-			<view class="item" @click="sharetoFriend()">
-				<image mode="widthFix" src="/static/imgs/wxpyq.png" />
-				<p>分享微信朋友圈</p>
+
+			<block v-if="list && list.length > 0">
+				<!-- 商品明细卡片 (【修复】：优化卡片交替颜色，奇偶错开，采用质感浅米色与白色交替，消除视觉连贯眩晕感) -->
+				<view :class="['floating-card-item', i % 2 === 0 ? 'card-even' : 'card-odd']" v-for="(item, i) in list" :key="item.id || i">
+					<!-- 卡片第一行：No.徽章序号 -->
+					<div class="card-header-line">
+						<div class="left-header-group">
+							<text class="item-index-badge">序号 {{ i + 1 }}</text>
+						</div>
+					</div>
+
+					<!-- 产品参数行：【修复】将产品名称独立提到最上方第一行，电压等级、产品型号、规格依次对齐，符合电商黄金阅读逻辑 -->
+					<view class="card-grid-boxes-line">
+						<!-- 【修复新增】：产品名称独立置顶第一行 -->
+						<view class="param-box-item name-box-item">
+							<text class="box-label">产品名称：</text>
+							<text class="box-val custom-blue-text">{{ cleanField(item.name || item.title || item.product_name, 'name') }}</text>
+						</view>
+
+						<view class="combined-row-half">
+							<view class="half-param-item">
+								<text class="box-label">电压等级：</text>
+								<text class="box-val custom-blue-text">{{ cleanField(item.attr1, 'voltage') }}</text>
+							</view>
+							<view class="half-param-item">
+								<text class="box-label">产品型号：</text>
+								<text class="box-val custom-blue-text">{{ cleanField(item.model || item.attr2, 'model') }}</text>
+							</view>
+						</view>
+
+						<view class="param-box-item spec-box-item">
+							<text class="box-label">产品规格：</text>
+							<text class="box-val custom-blue-text">{{ cleanField(item.attr3 || item.spec, 'spec') }}</text>
+						</view>
+					</view>
+
+					<!-- 卡片底部行：数量、单价、小计 (标题黑色分离，数值保持红色) -->
+					<view class="card-footer-line">
+						<view class="footer-item">
+							<text class="f-label-black">数量：</text>
+							<text class="f-val-red">{{ item.nums || item.product_nums || 0 }}</text>
+						</view>
+						<view class="footer-item price-plain-item">
+							<text class="f-label-black">单价：</text>
+							<text class="f-val-red price-highlight-red">¥{{ item.final_price || item.price || 0 }}</text>
+						</view>
+						<view class="footer-item subtotal-item-group">
+							<text class="f-label-black">小计：</text>
+							<text class="f-val-red subtotal-num-red">¥{{ (item.total && item.total > 0) ? item.total : 0 }}</text>
+						</view>
+					</view>
+				</view>
+			</block>
+			
+			<!-- 空数据占位 -->
+			<view v-else class="empty-state">
+				<text>暂无商品明细数据</text>
 			</view>
 		</view>
 
+		<!-- 商务条款与备注卡片 -->
+		<view class="floating-section-card" v-if="hasTerms">
+			<view class="form-group-title">商务与履约条款</view>
+			<view class="modern-form-item" v-if="infos.check_type"><text class="form-label">付款方式：</text><text class="val-text">{{ infos.check_type }}</text></view>
+			<view class="modern-form-item" v-if="infos.trans_type"><text class="form-label">运输方式：</text><text class="val-text">{{ infos.trans_type }}</text></view>
+			<view class="modern-form-item" v-if="infos.fees_out"><text class="form-label">运输费用：</text><text class="val-text">{{ infos.fees_out }}</text></view>
+			<view class="modern-form-item" v-if="infos.pack_recyle"><text class="form-label">包装选项：</text><text class="val-text">{{ infos.pack_recyle }}</text></view>
+		</view>
+
+		<!-- 抬头与人员档案卡片 -->
+		<view class="floating-section-card">
+			<view class="form-group-title">抬头与人员档案</view>
+			<view class="modern-form-item" v-if="infos.rep_comp"><text class="form-label">报价单位：</text><text class="val-text">{{ infos.rep_comp }}</text></view>
+			<view class="modern-form-item" v-if="infos.question_comp"><text class="form-label">询价单位：</text><text class="val-text">{{ infos.question_comp }}</text></view>
+			<view class="modern-form-item" v-if="infos.project_comp"><text class="form-label">项目名称：</text><text class="val-text">{{ infos.project_comp }}</text></view>
+			<view class="modern-form-item" v-if="infos.rep_user"><text class="form-label">报价人员：</text><text class="val-text">{{ infos.rep_user }}</text></view>
+			<view class="modern-form-item" v-if="infos.rep_phone || infos.tel || infos.phone"><text class="form-label">手机号码：</text><text class="val-text">{{ infos.rep_phone || infos.tel || infos.phone }}</text></view>
+		</view>
+
+		<!-- 备注信息卡片 -->
+		<view class="floating-section-card compact-remark-card" v-if="infos.tags">
+			<view class="form-group-title">备注与说明</view>
+			<view class="textarea-box">
+				<text class="remark-content" space="nbsp">{{ infos.tags }}</text>
+			</view>
+		</view>
+		
+		<!-- 底部高定悬浮结算舱 (样式与DATA页完全对齐) -->
+		<view class="floating-checkout-dock">
+			<view class="dock-summary-info">
+				<view class="sum-row-top">
+					<text class="sum-item"><text class="dock-title-black">条数：</text><text class="dock-val-red">{{ list ? list.length : 0 }}</text></text>
+					<text class="sum-item"><text class="dock-title-black">总量：</text><text class="dock-val-red">{{ count || 0 }}</text></text>
+					<text class="tax-flag-badge badge-special">{{ actualTaxText }}</text>
+				</view>
+				<view class="sum-row-bottom">
+					<!-- 总计金额支持显示后两位（小数点后两位） -->
+					<text class="total-money-label"><text class="dock-title-black">总计：</text><text class="money-num-red">¥{{ formatMoney(total) }}</text></text>
+				</view>
+				<view class="sum-row-words">
+					<text class="chinese-words"><text class="dock-title-black">大写：</text><text class="dock-content-red">{{ total_n || '零元整' }}</text></text>
+				</view>
+			</view>
+		</view>
+
+		<!-- 底部免责提示 -->
+		<view class="page-tip-text">
+			<text>本报价仅供参考，具体条款以最终盖章文本为准</text>
+		</view>
+
+		<!-- 加大底部留白高度，确保滑动到最底部时抬头与人员档案内容不被底栏遮挡 -->
+		<view style="height: 320rpx;"></view>
+		
+		<!-- 底部固定双按钮操作栏 -->
+		<view class="fenxiang">
+			<view class="item metal-btn" @click="sharePdfDoc()">
+				<view class="icon-wrap">
+					<image class="svg-icon" src="@/static/icon/bj-pdf.png" mode="aspectFit" />
+				</view>
+				<text>发送PDF文档</text>
+			</view>
+			<view class="item metal-btn" @click="shareImage()">
+				<view class="icon-wrap">
+					<image class="svg-icon" src="@/static/icon/bj-tp.png" mode="aspectFit" />
+				</view>
+				<text>发送长图报价</text>
+			</view>
+		</view>
 	</view>
 </template>
 
@@ -175,728 +172,655 @@
 			return {
 				id: '',
 				uid: '',
-				list: '',
+				list: [], 
 				total: '',
 				total_n: '',
-				ratio: '',
-				//
-				mask: 0,
-				mask_pays: 0,
-				infos: '',
-				excel_url: '',
+				ratioVal: 0,
+				infos: {}, 
+				pdf_url: '', 
 				img_url: "",
 				count: 0,
 				elcc_sn: '',
+				rawTaxKey: '',
+			}
+		},
+		computed: {
+			hasTerms() {
+				let info = this.infos;
+				return !!(info.check_type || info.trans_type || info.fees_out || info.pack_recyle);
+			},
+			actualTaxText() {
+				let info = this.infos || {};
+				let candidateFields = [
+					this.rawTaxKey,
+					info.tax_type,
+					info.invoice_type,
+					info.tax,
+					info.tax_name,
+					info.tax_title,
+					info.ticket
+				];
+
+				for (let i = 0; i < candidateFields.length; i++) {
+					let val = candidateFields[i];
+					if (val !== undefined && val !== null && val !== '') {
+						let str = String(val).trim();
+						if (str === '2' || str.includes('专') || str.includes('专用')) {
+							return "含专用发票";
+						}
+						if (str === '1' || str.includes('普') || str.includes('普通')) {
+							return "含普通发票";
+						}
+						if (str === '0' || str.includes('不含') || str.includes('无')) {
+							return "不含发票";
+						}
+					}
+				}
+
+				let val = Number(info.ratio !== undefined ? info.ratio : this.ratioVal);
+				if (val >= 7) {
+					return "含专用发票";
+				} else if (val > 0 && val < 7) {
+					return "含普通发票";
+				} else {
+					return "不含发票";
+				}
+			},
+			taxTagClass() {
+				let text = this.actualTaxText;
+				if (text.includes('专用')) {
+					return 'tax-zhuan';
+				} else if (text.includes('普通')) {
+					return 'tax-pu';
+				} else {
+					return 'tax-none';
+				}
 			}
 		},
 		onLoad(option) {
 			this.id = option.id ? option.id : ''
 			let userInfo = uni.getStorageSync('loginTicket');
-			if (userInfo == null || userInfo == "") {
+			if (!userInfo) {
 				uni.showModal({
 					title: '提示',
 					content: '您还未登录，前往登录',
 					showCancel: false,
 					success: (res) => {
 						if (res.confirm) {
-							uni.reLaunch({
-								url: '/pages/login_md/login_md'
-							})
-						} else if (res.cancel) {
-							console.log('用户点击取消');
+							uni.reLaunch({ url: '/pages/login_md/login_md' })
 						}
 					}
 				});
 			} else {
-				console.log(userInfo);
 				this.uid = userInfo.id
 				this.doIninit()
 				this.outUrl()
 			}
 		},
 		methods: {
-			shareBg() {
-				console.log(this.excel_url);
-				if (!this.excel_url) {
-					uni.showToast({
-						icon: "none",
-						title: "正在获取链接请稍后"
-					})
+			formatMoney(val) {
+				if (val === undefined || val === null || val === '') return '0.00';
+				let num = Number(val);
+				if (isNaN(num)) return val;
+				return num.toFixed(2);
+			},
+			cleanField(val, type) {
+				if (!val) return '暂无';
+				let str = String(val).trim();
+				str = str.replace(/^(产品型号|型号|产品规格|规格|电压等级|电压|等级|产品名称|名称)[\s]*[:：\-]*/g, '');
+				str = str.replace(/^(产品|等级)[\s]*[:：\-]*/g, '');
+				str = str.replace(/(产品型号|型号|产品规格|规格|电压等级|电压|产品名称|名称)[\s]*[:：\-]+/g, '');
+				return str.trim() || '暂无';
+			},
+			sharePdfDoc() {
+				if (!this.pdf_url) {
+					uni.showToast({ icon: "none", title: "PDF文档正在生成中，请稍后..." })
 					return false
 				}
-				let self = this
 				if (uni.getSystemInfoSync().platform == "android") {
 					const wechat_fileshare = uni.requireNativePlugin("wechat-fileshare");
 					if (wechat_fileshare) {
 						uni.downloadFile({
-							url: this.excel_url,
-							header: {
-								'Content-Type': 'application/pdf; charset=UTF-8', // 这里把pdf改成你要的文件名
-							},
+							url: this.pdf_url,
+							header: { 'Content-Type': 'application/pdf; charset=UTF-8' },
 							success: (res) => {
 								if (res.statusCode === 200) {
-									console.log('下载成功');
-								}
-								let that = this;
-								wechat_fileshare.send({
+									wechat_fileshare.send({
 										path: res.tempFilePath,
-										uni_app_id: '__UNI__94C6955', //改成你的uniapp的appid在  项目根目录>manifest.json>基础配置
-										filetype: 'xls', //填入文件类型
-										package_name: 'com.tencent.mm', //填入要传递的应用包名，比如微信是com.tencent.mm, qq是com.tencent.mobileqq 其他的上网稍微查一下就知道了
-										filename: this.elcc_sn //不需要填入null filename:null
-									}, e => {
-										// 回调函数
-										// uni.showToast({
-										// 	title: '响应数据：' + JSON.stringify(e),
-										// 	icon: 'none'
-										// });
-									}
-
-								)
+										uni_app_id: '__UNI__94C6955',
+										filetype: 'pdf',
+										package_name: 'com.tencent.mm',
+										filename: (this.elcc_sn || '电缆报价单') + '.pdf'
+									}, e => {})
+								}
 							}
 						})
-					}else{
-						uni.share({
-							provider: "weixin",
-							scene: "WXSceneSession", // WXSceneSession 分享到聊天界面，WXSceneTimeline 分享到朋友圈
-							type: 0, // 0表示文字，1表示图片，2表示音乐，3表示视频，4表示小程序，5表示文件（5仅App支持），6表示URL
-							href: this.excel_url,
-							title: this.elcc_sn,
-							imageUrl: this.img_url,
-							success: function(res) {
-								console.log("分享成功");
-							},
-							fail: function(err) {
-								console.log("分享失败", err);
-							}
-						});
+					} else {
+						this.doShare(this.pdf_url, 0, "WXSceneSession");
 					}
-
 				} else {
-					uni.share({
-						provider: "weixin",
-						scene: "WXSceneSession", // WXSceneSession 分享到聊天界面，WXSceneTimeline 分享到朋友圈
-						type: 0, // 0表示文字，1表示图片，2表示音乐，3表示视频，4表示小程序，5表示文件（5仅App支持），6表示URL
-						href: this.excel_url,
-						title: this.elcc_sn,
-						imageUrl: this.img_url,
-						success: function(res) {
-							console.log("分享成功");
-						},
-						fail: function(err) {
-							console.log("分享失败", err);
+					uni.downloadFile({
+						url: this.pdf_url,
+						success: (res) => {
+							if (res.statusCode === 200) {
+								uni.openDocument({
+									filePath: res.tempFilePath,
+									fileType: 'pdf',
+									success: () => { console.log('打开PDF成功'); }
+								});
+							}
 						}
 					});
 				}
-
-
-
-
 			},
 			shareImage() {
 				if (!this.img_url) {
-					uni.showToast({
-						icon: "none",
-						title: "正在获取链接请稍后"
-					})
+					uni.showToast({ icon: "none", title: "图片正在生成中，请稍后..." })
 					return false
 				}
-				// console.log(11);
-				// console.log(this.elcc_sn);
-				// console.log(this.img_url);
-				uni.share({
-					provider: "weixin",
-					scene: "WXSceneSession", // WXSceneSession 分享到聊天界面，WXSceneTimeline 分享到朋友圈
-					type: 0,
-					href:this.img_url,
-					title: this.elcc_sn,
-					imageUrl: this.img_url,
-					success: function(res) {
-						console.log("分享成功");
-					},
-					fail: function(err) {
-						console.log("分享失败", err);
-					}
-				});
+				this.doShare(this.img_url, 0, "WXSceneSession");
 			},
-			sharetoWechat() {
+			doShare(href, type, scene, imageUrl) {
 				uni.share({
 					provider: "weixin",
-					scene: "WXSceneSession", // WXSceneSession 分享到聊天界面，WXSceneTimeline 分享到朋友圈
-					type: 0, // 0表示文字，1表示图片，2表示音乐，3表示视频，4表示小程序，5表示文件（5仅App支持），6表示URL
-					href: "http://app.elccc.cn/Inter/Wcins/repinfos/id/" + this.id,
-					title: this.elcc_sn,
-					imageUrl: "/static/logo.png",
-					success: function(res) {
-						console.log("分享成功");
-					},
-					fail: function(err) {
-						console.log("分享失败", err);
-					}
-				});
-			},
-			sharetoFriend() {
-				uni.share({
-					provider: "weixin",
-					scene: "WXSceneTimeline", // WXSceneSession 分享到聊天界面，WXSceneTimeline 分享到朋友圈
-					type: 0, // 0表示文字，1表示图片，2表示音乐，3表示视频，4表示小程序，5表示文件（5仅App支持），6表示URL
-					href: "http://app.elccc.cn/Inter/Wcins/repinfos/id/" + this.id,
-					title: this.elcc_sn,
-					imageUrl: "/static/logo.png",
-					success: function(res) {
-						console.log("分享成功");
-					},
-					fail: function(err) {
-						console.log("分享失败", err);
-					}
+					scene: scene,
+					type: type,
+					href: href,
+					title: this.elcc_sn || '电缆商务报价单',
+					imageUrl: imageUrl || this.img_url,
+					success: function(res) { console.log("分享成功"); },
+					fail: function(err) { console.log("分享失败", err); }
 				});
 			},
 			doIninit() {
 				let that = this;
-				let params = {
-					uid: that.uid,
-					id: that.id
-				};
+				let params = { uid: that.uid, id: that.id };
 
 				that.$api.repinfos(params).then(ret => {
-					that.list = ret.data.list;
-					that.total = ret.data.total;
-					that.total_n = ret.data.total_n;
-					this.count = 0
-					this.list.forEach((item, index) => {
-						this.count += parseInt(item.nums)
-					})
-					if (ret.data.ratio < 1) {
-						that.ratio = "不含税票";
-					}
-					if (ret.data.ratio > 0 && ret.data.ratio < 7) {
-						that.ratio = "含普通发票";
-					}
-					if (ret.data.ratio > 7) {
-						that.ratio = "含专用发票";
-					}
-					that.infos = ret.data.info;
-				})
+					if(!ret.data) return;
+					let resData = ret.data;
+					that.list = resData.list || resData.goods || resData.goods_list || [];
+					that.total = resData.total || 0;
+					that.total_n = resData.total_n || '零元整';
+					
+					this.count = 0;
+					this.list.forEach((item) => {
+						this.count += parseInt(item.nums || item.product_nums || 0);
+					});
+					
+                    that.infos = resData.info || resData || {};
+					that.ratioVal = Number(that.infos.ratio || resData.ratio || 0);
+					
+					that.rawTaxKey = resData.tax_type || resData.invoice_type || resData.tax || resData.ticket || 
+					                 that.infos.tax_type || that.infos.invoice_type || that.infos.tax || that.infos.ticket || '';
+				}).catch(err => {
+					console.error("获取报价单详情报错", err);
+					that.list = [];
+				});
 			},
 			outUrl() {
-				uni.showLoading({
-					title:"生成中...",
-					mask:true
-				})
-				this.$api.outUrl({
-					id: this.id,
-					uid: this.uid
-				}).then(ret => {
-					this.excel_url = ret.data.excel_url
-					this.img_url = ret.data.img_url
-					this.elcc_sn = ret.data.elcc_sn
-				}).finally(e=>{
-					uni.hideLoading()
-				})
+				this.$api.outUrl({ id: this.id, uid: this.uid }).then(ret => {
+					if (ret && ret.data) {
+						this.pdf_url = ret.data.pdf_url || ret.data.excel_url || '';
+						this.img_url = ret.data.img_url || '';
+						this.elcc_sn = ret.data.elcc_sn || '报价单';
+					}
+				}).catch(e => {
+					console.error(e);
+				});
 			}
 		}
 	}
 </script>
 
 <style scoped lang="scss">
-	.fenxiang {
-		width: 750rpx;
-		height: 160rpx;
-		position: fixed;
-		display: flex;
-		align-items: center;
-		justify-content: space-around;
-		background-color: #c4c4c4;
-		bottom: 0rpx;
+	.modern-report-page {
+		background-color: #f8fafc;
+		min-height: 100vh;
+		padding: 20rpx;
+		box-sizing: border-box;
+		font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+	}
 
-		.item {
+	.logo-box {
+		width: 100%;
+		display: flex;
+		justify-content: center;
+		margin-bottom: 20rpx;
+		.logo-img {
+			width: 100%;
+			max-height: 120rpx;
+		}
+	}
+
+	.text-red { color: #dc2626 !important; }
+	.text-green { color: #16a34a !important; }
+	.text-gray { color: #64748b !important; }
+
+	.custom-blue-text {
+		color: #2563eb !important;
+		font-weight: 500 !important;
+	}
+
+	.f-label-black {
+		color: #1e293b !important;
+		font-size: 22rpx;
+		font-weight: 500;
+		margin-right: 4rpx;
+	}
+	.f-val-red {
+		color: #dc2626 !important;
+		font-weight: 500;
+		font-size: 22rpx;
+	}
+	.price-highlight-red {
+		color: #e11d48 !important;
+		font-weight: bold !important;
+		font-size: 24rpx !important;
+	}
+	.subtotal-num-red {
+		color: #e11d48 !important;
+		font-weight: 600 !important;
+		font-size: 24rpx !important;
+	}
+
+	.dock-title-black {
+		color: #1e293b !important;
+		font-weight: 500 !important;
+	}
+	.dock-val-red {
+		color: #dc2626 !important;
+		font-weight: bold !important;
+	}
+	.money-num-red {
+		color: #dc2626 !important;
+		font-weight: bold !important;
+		font-size: 34rpx !important;
+		margin-left: 6rpx;
+	}
+	.dock-content-red {
+		color: #dc2626 !important;
+	}
+
+	.tax-flag-badge {
+		padding: 2rpx 12rpx;
+		border-radius: 6rpx;
+		font-size: 20rpx;
+		font-weight: bold;
+		&.badge-special {
+			background: #fff1f2;
+			color: #e11d48;
+			border: 1rpx solid #fecdd3;
+		}
+	}
+
+	/* 顶部琥珀主题看板 - 同步Data页 */
+	.hero-control-header.amber-theme-box {
+		background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+		border: 1rpx solid #fde68a;
+		border-radius: 20rpx;
+		padding: 20rpx 24rpx;
+		box-shadow: 0 8rpx 20rpx -4rpx rgba(217, 119, 6, 0.12);
+		margin-bottom: 20rpx;
+
+		.header-title-row {
 			display: flex;
 			align-items: center;
-			justify-content: center;
-			flex-direction: column;
+			justify-content: space-between;
+			margin-bottom: 14rpx;
 
-			image {
-				width: 60rpx;
-				height: 60rpx;
+			.main-label {
+				font-size: 26rpx;
+				font-weight: bold;
+				color: #92400e;
 			}
 
-			p {
-				font-size: 24rpx;
-				color: #333333;
-				margin: 10rpx 0 0 0;
+			.stepper-box {
+				display: flex;
+				align-items: center;
+				background: #ffffff;
+				border-radius: 28rpx;
+				padding: 2rpx 16rpx;
+				border: 1rpx solid #fcd34d;
+
+				.step-value {
+					font-size: 26rpx;
+					font-weight: bold;
+				}
+			}
+		}
+
+		.filter-capsule-row {
+			display: flex;
+
+			.capsule-pill.full-width-pill {
+				width: 100%;
+				background: #ffffff;
+				border: 1rpx solid #fde68a;
+				border-radius: 12rpx;
+				padding: 14rpx 20rpx;
+				display: flex;
+				align-items: center;
+				justify-content: space-between;
+				box-shadow: 0 2rpx 6rpx rgba(0, 0, 0, 0.02);
+
+				.pill-left-group {
+					.pill-key {
+						font-size: 24rpx;
+						color: #78350f;
+						font-weight: bold;
+					}
+				}
+
+				.pill-right-group {
+					display: flex;
+					align-items: center;
+					gap: 8rpx;
+
+					.pill-val {
+						font-size: 24rpx;
+						color: #b45309;
+						font-weight: bold;
+					}
+				}
 			}
 		}
 	}
 
-	.green {
-		color: green;
+	.product-stream-section {
+		margin-bottom: 20rpx;
+
+		.section-heading {
+			display: flex;
+			justify-content: space-between;
+			align-items: center;
+			margin-bottom: 14rpx;
+			padding: 0 6rpx;
+
+			.sec-title {
+				font-size: 26rpx;
+				font-weight: bold;
+				color: #1e293b;
+			}
+
+			.sec-count {
+				font-size: 22rpx;
+				color: #64748b;
+			}
+		}
+
+		.empty-state {
+			background: #ffffff;
+			border-radius: 20rpx;
+			padding: 30rpx;
+			text-align: center;
+			color: #94a3b8;
+			font-size: 26rpx;
+			box-shadow: 0 8rpx 20rpx rgba(0, 0, 0, 0.04);
+		}
+
+		/* 商品卡片同步Data风格：【修复】强化奇偶项颜色交替，偶数行采用质感浅米色（#fffcf5）与金色边缘，消除眩晕感 */
+		.floating-card-item {
+			border-radius: 20rpx;
+			padding: 18rpx 24rpx;
+			margin-bottom: 20rpx;
+			box-shadow: 0 10rpx 25rpx rgba(100, 116, 139, 0.06);
+			border: 1rpx solid #e2e8f0;
+
+			&.card-odd { background-color: #ffffff; }
+			&.card-even { background-color: #fffcf5; border-color: #fde68a; }
+
+			.card-header-line {
+				display: flex;
+				justify-content: space-between;
+				align-items: center;
+				padding-bottom: 12rpx;
+				border-bottom: 1rpx dashed #f1f5f9;
+				margin-bottom: 12rpx;
+
+				.left-header-group {
+					.item-index-badge {
+						font-size: 20rpx;
+						font-weight: bold;
+						padding: 4rpx 10rpx;
+						border-radius: 8rpx;
+						background: #fffbeb;
+						color: #b45309;
+						border: 1rpx solid #fde68a;
+					}
+				}
+			}
+
+			.card-grid-boxes-line {
+				display: flex;
+				flex-direction: column;
+				gap: 6rpx;
+				margin-bottom: 12rpx;
+				background: #f8fafc;
+				padding: 8rpx 10rpx;
+				border-radius: 12rpx;
+				border: 1rpx solid #f1f5f9;
+
+				.combined-row-half {
+					display: flex;
+					gap: 8rpx;
+					width: 100%;
+
+					.half-param-item {
+						flex: 1;
+						background: #ffffff;
+						border: 1rpx solid #e2e8f0;
+						border-radius: 8rpx;
+						padding: 8rpx 10rpx;
+						display: flex;
+						align-items: center;
+
+						.box-label {
+							font-size: 22rpx;
+							color: #64748b;
+							font-weight: 500;
+							flex-shrink: 0;
+						}
+
+						.box-val {
+							font-size: 24rpx;
+							color: #334155;
+							word-break: break-all;
+							flex: 1;
+							text-align: left;
+						}
+					}
+				}
+
+				.param-box-item {
+					background: #ffffff;
+					border: 1rpx solid #e2e8f0;
+					border-radius: 8rpx;
+					padding: 8rpx 10rpx;
+					display: flex;
+					align-items: center;
+
+					.box-label {
+						font-size: 22rpx;
+						color: #64748b;
+						font-weight: 500;
+						flex-shrink: 0;
+					}
+
+					.box-val {
+						font-size: 24rpx;
+						color: #334155;
+						word-break: break-all;
+						flex: 1;
+						text-align: left;
+					}
+				}
+			}
+
+			.card-footer-line {
+				display: flex;
+				justify-content: space-between;
+				align-items: center;
+				border-top: 1rpx dashed #f1f5f9;
+				padding-top: 10rpx;
+			}
+		}
 	}
 
-	.red {
-		color: red;
+	.floating-section-card {
+		background: #ffffff;
+		border-radius: 20rpx;
+		padding: 4rpx 24rpx;
+		margin-bottom: 20rpx;
+		box-shadow: 0 8rpx 20rpx rgba(148, 163, 184, 0.08);
+		border: 1rpx solid #e2e8f0;
+
+		&.compact-remark-card {
+			padding-bottom: 16rpx;
+			.textarea-box {
+				padding: 8rpx 0;
+				.remark-content {
+					font-size: 26rpx;
+					color: #334155;
+					line-height: 1.5;
+					word-break: break-all;
+				}
+			}
+		}
+
+		.form-group-title {
+			font-size: 24rpx;
+			font-weight: bold;
+			color: #b45309;
+			padding: 18rpx 0 10rpx 0;
+			border-bottom: 1rpx solid #fef3c7;
+			margin-bottom: 4rpx;
+		}
+
+		.modern-form-item {
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			padding: 16rpx 0;
+			border-bottom: 1rpx solid #f8fafc;
+
+			&:last-child { border-bottom: none; }
+
+			.form-label {
+				font-size: 26rpx;
+				color: #334155;
+				font-weight: 500;
+			}
+
+			.val-text {
+				font-size: 26rpx;
+				color: #1f293b;
+				font-weight: 500;
+				text-align: right;
+				max-width: 70%;
+				word-break: break-all;
+			}
+		}
 	}
 
-
-
-	.blue {
-		color: blue;
-	}
-
-	.footerFlex {
+	/* 底部高定悬浮结算舱 - 同步Data风格 */
+	.floating-checkout-dock {
 		position: fixed;
-		bottom: 0px;
-		left: 0rpx;
-		width: 750rpx;
-	}
-
-	.uni-input {
-		flex: 1;
-		padding: 10rpx;
-		text-align: right;
-	}
-
-	.uni-item {
-		display: flex;
-		align-items: center;
-		justify-content: space-between;
-		padding: 10rpx 20rpx;
-		border-bottom: 1px solid #eee;
-	}
-
-	.uni-label {
-		flex: 1;
-		color: #000;
-	}
-
-	.uni-select {
-		border-radius: 5px;
-		padding: 10rpx;
-		text-align: right;
-		color: blue;
-	}
-
-	.uni-grid {
-		display: flex;
-		flex-direction: column;
-		flex-grow: 1;
-	}
-
-	.uni-row {
-		display: flex;
-	}
-
-	.uni-col {
-		flex: 1;
-		/* 让列平均分配宽度 */
-		padding: 20rpx;
-		/* 根据需要调整内边距 */
-		box-sizing: border-box;
-		font-size: 20rpx;
-		border: 1rpx solid #dcdcdc;
-	}
-
-	/* 边框样式，你可能需要根据实际情况进行调整 */
-	.uni-col:not(:last-child) {
-		border-right: 1rpx solid #dcdcdc;
-		/* 给列右侧添加边框 */
-	}
-
-	.uni-row:not(:last-child) .uni-col {
-		border-bottom: 1rpx solid #dcdcdc;
-		/* 给行底部的列添加边框 */
-	}
-
-	/* 文本颜色样式 */
-	.red-text {
-		color: red;
-		/* 红色表示价格上涨 */
-	}
-
-	.green-text {
-		color: green;
-		/* 绿色表示价格下跌 */
-	}
-
-	.black-text {
-		color: black;
-		/* 黑色表示价格不变 */
-	}
-
-	.red-text {
-		color: red;
-	}
-
-	.green-text {
-		color: green;
-	}
-
-	.black-text {
-		color: black;
-	}
-
-	.custom-table {
+		bottom: 160rpx;
+		left: 0;
+		right: 0;
 		width: 100%;
-
-	}
-
-	.custom-table .table-row {
-		display: flex;
-		height: 100%;
-
-	}
-
-	.goods_line_item .select-icon {
-		height: 100% !important;
-	}
-
-
-
-
-	.custom-table .xuhao {
-		width: 100rpx;
-		flex-shrink: 0;
-		display: flex;
-		font-size: 20rpx;
-		align-items: center;
-		justify-content: center;
-		flex-direction: column;
-		//border: 1px solid #333333;
-		border-bottom: 1rpx solid #dcdcdc;
-		border-top: 1rpx solid #dcdcdc;
-		/* 使用父的高度*/
-	}
-
-	.custom-table .foot {
-		width: 100%;
-		height: 120rpx;
-		display: flex;
-		padding: 20rpx;
-		align-items: center;
-	}
-
-	.ltr-textarea {
-		direction: ltr;
-		/* Left-to-Right direction */
-		text-align: left !important;
-	}
-
-
-
-
-
-	.select-ios .select-placeholder {
-		color: #000000;
-	}
-
-	.ceilNumb {
-		background: #f8f8f8;
-		font-size: 30rpx;
-		text-align: center;
-		padding: 20rpx 24rpx 20rpx 56rpx;
-	}
-	.ceilNumb_value{
-		background: white;
-		border: 1px solid #e5e5e5;
-		display: inline-block;
-		font-size: 44rpx;
-		height: 60rpx;
-		line-height: 60rpx;
-		vertical-align: top;
-		text-align: center;
-		font-size: 24rpx;
-		margin-left: 16rpx;
-		width: 100rpx;
-	}
-
-	.ceilNumb span {
-		background: white;
-		border: 1px solid #e5e5e5;
-		color: #1677ff;
-		display: inline-block;
-		font-size: 44rpx;
-		height: 60rpx;
-		line-height: 60rpx;
-		margin-top: -10rpx;
-		vertical-align: top;
-		text-align: center;
-		width: 60rpx;
-	}
-
-	.ceilNumb span.value {
-		color: black;
-		font-size: 24rpx;
-		margin-left: -6rpx;
-		width: 100rpx;
-	}
-
-	.ceilNumb input {
-		border: 2rpx solid #e5e5e5;
-		color: black;
-		display: inline-block;
-		font-size: 24rpx;
-		height: 60rpx;
-		line-height: 60rpx;
-		margin: -10rpx 0rem 0rem 2rpx;
-		vertical-align: middle;
-		text-align: center;
-		width: 100rpx;
-	}
-
-	.ceilNumb span:first-child {
-		margin-right: -10rpx;
-	}
-
-	.ceilNumb span:last-child {
-		margin-left: -8rpx;
-	}
-
-	.goods_line {
-		display: flex;
-	}
-
-	.goods_line .red {
-		color: #c20f22;
-	}
-
-	.goods_line .blue {
-		color: #4a90e2;
-	}
-
-	.goods_line .black {
-		color: black;
-	}
-
-	.goods {
-		border-top: 2rpx solid #dcdcdc;
-		//border-bottom: 1px solid #dcdcdc;
-	}
-
-	.goods_line_item {
-		border-right: 2rpx solid #dcdcdc;
-		//border-bottom: 1px solid #eeeeee;
+		max-width: 750rpx;
+		margin: 0 auto;
+		background: #ffffff;
+		box-shadow: 0 -12rpx 35rpx rgba(0, 0, 0, 0.08);
+		border-radius: 28rpx 28rpx 0 0;
+		z-index: 98;
+		padding: 20rpx 28rpx;
 		box-sizing: border-box;
-		font-size: 20rpx;
-		flex: 1;
-		min-height: 96rpx;
-		line-height: 96rpx;
+
+		.dock-summary-info {
+			background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+			border-radius: 16rpx;
+			padding: 14rpx 20rpx;
+			border: 1rpx solid #fde68a;
+
+			.sum-row-top {
+				display: flex;
+				justify-content: space-between;
+				align-items: center;
+				font-size: 22rpx;
+				margin-bottom: 6rpx;
+			}
+
+			.sum-row-bottom {
+				margin-bottom: 2rpx;
+				.total-money-label { font-size: 24rpx; font-weight: bold; }
+			}
+
+			.sum-row-words {
+				.chinese-words { font-size: 20rpx; }
+			}
+		}
+	}
+
+	.page-tip-text {
 		text-align: center;
+		padding: 10rpx 20rpx 30rpx 20rpx;
+		text { font-size: 22rpx; color: #9CA3AF; }
 	}
 
-	.goods_line_item.title {
-		font-size: 28rpx;
-	}
-
-	.goods_line_item.mrleft {
-		margin-left: 0px;
-	}
-
-	.goods_line_item.nobor {
-		border-right: 0px;
-	}
-
-	.goods_line_item .select-ios {
-		padding: 0px;
-		text-align: center;
-	}
-
-	.goods_line_item .item-ios.item-block .item-inner {
-		border: 0px;
-	}
-
-	.goods_line_item .select-icon {
-		margin-right: 20rpx;
-	}
-
-	.goods_line_imsr {
-		border-right: 1px solid #dcdcdc;
-		border-bottom: 1px solid #dcdcdc;
+	/* 底部固定分享栏 */
+	.fenxiang { 
+		width: 100vw; 
+		height: 160rpx; 
+		position: fixed; 
+		display: flex; 
+		align-items: center; 
+		justify-content: space-between; 
+		background-color: rgba(255, 255, 255, 0.98); 
+		backdrop-filter: blur(10px);
+		border-top: 1rpx solid #E5E7EB;
+		bottom: 0rpx; 
+		left: 0;
+		z-index: 99; 
+		box-shadow: 0 -16rpx 40rpx rgba(0, 0, 0, 0.15);
+		padding: 0 32rpx;
 		box-sizing: border-box;
-		flex: 4;
-		font-size: 16rpx;
-		min-height: 96rpx;
-		line-height: 48rpx;
-		padding-left: 10rpx;
-		text-align: left;
-	}
 
-	.goods_line_imsr.size {
-		line-height: 96rpx;
-		text-align: center;
-	}
+		.item { 
+			flex: 1;
+			height: 96rpx;
+			display: flex; 
+			align-items: center; 
+			justify-content: center; 
+			border-radius: 16rpx;
+			box-shadow: 0 4rpx 14rpx rgba(0, 0, 0, 0.08);
 
-	.goods_line_imse {
-		border-bottom: 2rpx solid #dcdcdc;
-		box-sizing: border-box;
-		flex: 2;
-		font-size: 20rpx;
-		min-height: 96rpx;
-		line-height: 96rpx;
-		text-align: center;
-	}
+			&:first-child { margin-right: 20rpx; }
 
-	.totals {
-		background: #fffad8;
-		padding: 8rpx 20rpx 20rpx;
-	}
+			&.metal-btn {
+				background: linear-gradient(135deg, #F8FAFC 0%, #E2E8F0 100%);
+				border: 1rpx solid #CBD5E1;
+				text { color: #1E293B; }
+			}
 
-	.totals p {
-		font-size: 24rpx;
-		margin: 0rem;
-		padding-top: 10rpx;
-	}
+			.icon-wrap {
+				width: 44rpx;
+				height: 44rpx;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				margin-right: 12rpx;
 
-	.totals p span {
-		color: #d0021b;
-	}
+				.svg-icon { width: 40rpx; height: 40rpx; }
+			}
 
-	.totals p span.blue {
-		color: #1677ff;
-	}
-
-	.totals p span.red {
-		color: #c20f22;
-	}
-
-	.totals p span.black {
-		color: black;
-	}
-
-	.rep_tags {
-		background: #4a90e2;
-		box-sizing: border-box;
-		color: white;
-		font-size: 24rpx;
-		height: 80rpx;
-		display: flex;
-		align-items: center;
-
-		//margin-top: 2rem;
-		//padding: 0.6rem 1.2rem;
-	}
-
-	.ticket_color {
-		background: #f8bebe;
-	}
-
-	.rep_tags2 {
-		margin-top: 0rem;
-	}
-
-	ion-list {
-		background: #f8f8f8;
-	}
-
-	.select-ios {
-		flex: 1;
-		text-align: right;
-	}
-
-	.item-ios {
-		padding-left: 0px;
-	}
-
-	.item-inner {
-		font-size: 30rpx;
-	}
-
-	.text-input {
-		position: relative;
-		text-align: right;
-	}
-
-	.text-input::after {
-		display: table;
-		content: ">";
-		height: 1rem;
-		position: absolute;
-		top: 0rem;
-		right: 0rem;
-		width: 20rpx;
-	}
-
-	.item-input ion-label {
-		margin-left: 24rpx;
-	}
-
-	.list-ios .item-block .item-inner {
-		border-bottom: 2rpx solid #dcdcdc;
-	}
-
-	.list-ios>.item-block:first-child {
-		border-top: 0px;
-	}
-
-	.list-ios>.item-block:last-child {
-		border-bottom: 2rpx solid #dcdcdc;
-	}
-
-	.item-select ion-label {
-		margin-left: 24rpx;
-	}
-
-	textarea.text-input {
-		height: 100rpx;
-	}
-
-	.footer_bg {
-		background: #f8f8f8;
-		height: 48rpx;
-	}
-
-	.footer {
-		//padding: 1.6rem 1.2rem;
-	}
-
-	.footer button {
-		background: #c20f22;
-		border-radius: 4rpx;
-		display: block;
-		font-size: 24rpx;
-		color: white;
-		height: 60rpx;
-		line-height: 60rpx;
-		width: 100%;
-	}
-
-	.footer button:last-child {
-		background: white;
-		border: 1px solid #c20f22;
-		color: #c20f22;
-
-	}
-
-	.mask {
-		bottom: 0rem;
-		background: black;
-		opacity: 0.3;
-		position: fixed;
-		top: 0rem;
-		width: 100%;
-		z-index: 10;
-	}
-
-	.mark_body {
-		background: white;
-		border-radius: 30rpx;
-		padding: 30rpx 0rem;
-		width: 690rpx;
-		display: flex;
-		align-items: center;
-		flex-direction: column;
-	}
-
-	.mark_body_footer {
-		border-top: 1px solid #999;
-		display: flex;
-		padding-top: 40rpx;
-		text-align: center;
-	}
-
-	.mark_body_footer-item {
-		flex: 1;
-	}
-
-	.mark_body_footer-item.red {
-		color: #c20f22;
+			text { 
+				font-size: 28rpx; 
+				font-weight: 600; 
+				letter-spacing: 1rpx;
+			}
+		}
 	}
 </style>

@@ -27,8 +27,11 @@
 		<swiper circular class="swiper-box" @change="swiperChange" :current="swiperCurrent" @transition="transition" @animationfinish="animationfinish">
 			<swiper-item class="swiper-item" v-for="(item, index) in swiperList" :key="item.id">
 				<scroll-view v-if="isShow" scroll-y style="height: 100%;width: 100%;" @scrolltolower="onreachBottom">
-					<view  style="padding: 20rpx;" >
-						<u-swiper img-mode="widthFix" :height="350" name="source_url" :list="banner"></u-swiper>
+					 <view style="padding: 20rpx;">
+					   <view style="">
+						<u-swiper img-mode="widthFix" :height="358" name="source_url" :list="banner"></u-swiper>
+						<!-- <u-swiper img-mode="widthFix" :height="350" name="source_url" :list="banner"></u-swiper> -->
+					</view>
 					</view>
 					<view v-for="(m,index) in list" :key="m.id">
 						<view class="ads">
@@ -61,7 +64,7 @@
 
 		<!--MASK SLIDE-->
 		<view class="menu_mask" @click="closeNav()" v-if="navi_slide>0"></view>
-		<view class="menu_body" v-if="navi_slide>0">
+		<view class="menu_body" style="max-height: 80vh; overflow-y: auto;" v-if="navi_slide>0">
 			<view class="menu_body_title d_a_j" @click="closeNav()">
 				<image src="../../static/imgs/cha.png" style="width: 40rpx;height: 40rpx;" mode=""></image>
 				<text style="margin-left: 10rpx;">全部分类</text>
@@ -76,7 +79,8 @@
 	import $publicConfig from 'config/publicConfig.js'
 	import uTabs from '../../components/u-tabs/u-tabs.vue'
 	import AMap from '../../common/amapWx.js'
-	import appUpdate from '@/uni_modules/leruge-app-update/js_sdk/leruge-app-update.js'
+	// import appUpdate from '@/uni_modules/leruge-app-update/js_sdk/leruge-app-update.js'
+	import silenceUpdate from '@/uni_modules/rt-uni-update/js_sdk/silence-update.js' //引入静默更新
 	export default {
 		components: {
 			uTabs,
@@ -400,15 +404,42 @@
 				}).then(res=>{
 					console.log(res);	
 					if(res.data){
-						let updateInfo = {
-							platform:system==1?'android':'ios',
-							updateContent: res.data.prompt,
-							downUrl: res.data.url,
-							version: res.data.version,
-							force: res.data.is_mandatory==1?false:true,
-							mainColor: 'FF5B78',
-						}
-						appUpdate(updateInfo)
+						// let updateInfo = {
+						// 	platform:system==1?'android':'ios',
+						// 	updateContent: res.data.prompt,
+						// 	downUrl: res.data.url,
+						// 	version: res.data.version,
+						// 	force: res.data.is_mandatory==1?false:true,
+						// 	mainColor: 'FF5B78',
+						// }
+						// appUpdate(updateInfo)
+						
+						// if (Number(res.data.data.edition_number) > Number(inf.versionCode) && res
+						// 	.data.data.edition_issue == 1) {
+						
+							//如果是wgt升级，并且是静默更新 （注意！！！ 如果是手动检查新版本，就不用判断静默更新，请直接跳转更新页，不然点击检查新版本后会没反应）
+							if (res.data.package_type == 1 && res.data.edition_silence == 1) {
+						
+								//调用静默更新方法 传入下载地址
+								silenceUpdate(res.data.url)
+						
+							} else {
+								console.log(11223456789);
+								//跳转更新页面 （注意！！！如果pages.json第一页的代码里有一打开就跳转其他页面的操作，下面这行代码最好写在setTimeout里面设置延时3到5秒再执行）
+								uni.navigateTo({
+									url: '/uni_modules/rt-uni-update/components/rt-uni-update/rt-uni-update?obj=' +
+										JSON.stringify(res.data)
+								});
+							}
+						// } else {
+						
+						// 	// 如果是手动检查新版本 需开启以下注释
+						// 	/* uni.showModal({
+						// 		title: '提示',
+						// 		content: '已是最新版本',
+						// 		showCancel: false
+						// 	}) */
+						// }
 					}
 					
 					

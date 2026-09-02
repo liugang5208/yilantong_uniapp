@@ -1,77 +1,179 @@
 <template>
 	<view class="wrap custom-class">
-		<view class="search d_a_sb">
-			<view class="d_a" style="flex: 1;margin-right: 20rpx;">
-				<view class="search_loc">
-					<image class="search_loc_image" src="/static/icon/ic_loc.png" mode="widthFix" />
-					<span>{{label}}</span>
-				</view>
-				<view class="search_input d_a_sb" @click="gotoSearch()">
-					<view style="height: 80rpx;flex: 1;" class="d_a">
-						<text>输入产品型号或商品名称</text>
-					</view>
-					<image src="/static/icon/ic_search.png" class="sh" mode="widthFix" />
-				</view>
-			</view>
-			<view class="search_msg d_a">
-				<image src="/static/icon/ic_msg.png" mode="widthFix" @click="gotoMsg()" />
-			</view>
-		</view>
-		<view class="tabs" style="position: relative;">
-			<u-tabs ref="uTabs" :list="cats" :current="current" @change="tabsChange" :is-scroll="true" swiperWidth="750"></u-tabs>
-			<view class="d_a_j" style="width: 40rpx;height:40rpx;position: absolute;right: -15rpx;top: 20rpx;background-color: #ffffff;z-index: 10;">
-				<image @click="slideNav()" style="width: 90%;height: 90%;" src="/static/imgs/ic_more.png" />
-			</view>
-
-		</view>
-		<swiper circular class="swiper-box" @change="swiperChange" :current="swiperCurrent" @transition="transition" @animationfinish="animationfinish">
-			<swiper-item class="swiper-item" v-for="(item, index) in swiperList" :key="item.id">
-				<scroll-view v-if="isShow" scroll-y style="height: 100%;width: 100%;" @scrolltolower="onreachBottom">
-					 <view style="padding: 20rpx;">
-					   <view style="">
-						<u-swiper img-mode="widthFix" :height="358" name="source_url" :list="banner"></u-swiper>
-						<!-- <u-swiper img-mode="widthFix" :height="350" name="source_url" :list="banner"></u-swiper> -->
-					</view>
-					</view>
-					<view v-for="(m,index) in list" :key="m.id">
-						<view class="ads">
-							<image class="ads_image" :src="m.source_url" mode="widthFix" />
-							<!-- <u-lazy-load height="100"  mode="widthFix"  :image="m.source_url"  ></u-lazy-load> -->
+		<!-- 顶部独立固定功能区块（吸顶） -->
+		<view class="top-header-fixed-wrap">
+			<view class="top-header-section">
+				<view class="search custom-search-bar">
+					<!-- 搜索框舒展释放：将点击事件直接绑在最外层容器，并加最高层级护盾 -->
+					<view class="search_input" @click.stop="gotoSearch()">
+						<view class="search-inner-box">
+							<image src="/static/icon/ic_search.png" class="sh-icon" mode="widthFix" />
+							<text class="sh-placeholder">搜索商品</text>
 						</view>
-						<view class="list_line">
-							<view :class="s.class" v-for="(s,index) in  m.child" :key='s.id' @click="changeInfo(s)">
-								<image :src="s.source_url" mode="widthFix" />
-								<!-- <u-lazy-load height="200" :image="s.source_url"  ></u-lazy-load> -->
+						<view class="search-click-shield"></view>
+					</view>
+					
+					<!-- 顶部右侧：极致精简，仅保留一个高级、轻量的AI智能报价胶囊 -->
+					<view class="top-right-group">
+						<view class="ai-smart-badge d_a_j" @click="gotoAiAssistant()">
+							<view class="ai-icon-wrap d_a_j">
+								<!-- 将原来的文字替换为你的新图标 -->
+								<image class="ai-logo-img" src="/static/ai-logo.png" mode="aspectFill" />
 							</view>
-
-						</view>
-					</view>
-				</scroll-view>
-				<view style="height: 100%;width: 100%;" v-if="!isShow">
-					<view class="loading_box ">
-						<view class="loading">
-							<span></span>
-							<span></span>
-							<span></span>
-							<span></span>
-							<span></span>
+							<view class="ai-text-box">
+								<text class="ai-title">易缆通Ai助手</text>
+							</view>
+							<view class="ai-pulse-dot"></view>
 						</view>
 					</view>
 				</view>
-			</swiper-item>
-		</swiper>
-
-
-		<!--MASK SLIDE-->
-		<view class="menu_mask" @click="closeNav()" v-if="navi_slide>0"></view>
-		<view class="menu_body" v-if="navi_slide>0">
-			<view class="menu_body_title d_a_j" @click="closeNav()">
-				<image src="../../static/imgs/cha.png" style="width: 40rpx;height: 40rpx;" mode=""></image>
-				<text style="margin-left: 10rpx;">全部分类</text>
 			</view>
-			<view :class="x.id==navi?'active':''" class="menu_body_list" v-for="(x,i) in cats" @click="clickNav(i)">{{x.name}}</view>
+
+			<!-- 导航栏标签区块 -->
+			<view class="modern-tabs-section">
+				<view class="tabs-scroll-wrapper">
+					<scroll-view 
+						scroll-x="true" 
+						class="custom-cat-scroll" 
+						:scroll-with-animation="true"
+						:scroll-into-view="scrollIntoId">
+						<view class="cat-pill-list">
+							<view 
+								class="cat-pill-item" 
+								:class="{ active: current === index }" 
+								v-for="(x, index) in cats" 
+								:key="x.id || index"
+								:id="'cat_item_' + index"
+								@click="tabsChange(index)">
+								<text class="pill-text">{{ x.name }}</text>
+							</view>
+						</view>
+					</scroll-view>
+				</view>
+				<view class="quick-drawer-floating-island d_a_j" @click="slideNav()">
+					<view class="island-trigger-content d_a_j">
+						<image class="tech-matrix-svg-img" src="data:image/svg+xml;utf8,<svg viewBox='0 0 1024 1024' xmlns='http://www.w3.org/2000/svg'><path d='M343.04 97.28H230.4c-73.216 0-133.12 59.904-133.12 133.12v112.64c0 73.216 59.904 133.12 133.12 133.12h215.04c16.896 0 30.72-13.824 30.72-30.72V230.4c0-73.216-59.904-133.12-133.12-133.12zM793.6 97.28h-112.64c-73.216 0-133.12 59.904-133.12 133.12v215.04c0 16.896 13.824 30.72 30.72 30.72h215.04c73.216 0 133.12-59.904 133.12-133.12V230.4c0-73.216-59.904-133.12-133.12-133.12zM445.44 547.84H230.4c-73.216 0-133.12 59.904-133.12 133.12v112.64c0 73.216 59.904 133.12 133.12 133.12h112.64c73.216 0 133.12-59.904 133.12-133.12v-215.04c0-16.896-13.824-30.72-30.72-30.72zM793.6 547.84h-215.04c-16.896 0-30.72 13.824-30.72 30.72v215.04c0 73.216 59.904 133.12 133.12 133.12h112.64c73.216 0 133.12-59.904 133.12-133.12v-112.64c0-73.216-59.904-133.12-133.12-133.12z' fill='%230052d9'></path></svg>" mode="widthFix" />
+						<text class="island-label">更多</text>
+					</view>
+				</view>
+			</view>
 		</view>
 
+		<!-- 轮播与主体内容区域 -->
+		<view class="main-swiper-container">
+			<swiper circular class="swiper-box" @change="swiperChange" :current="swiperCurrent" @transition="transition" @animationfinish="animationfinish">
+				<swiper-item class="swiper-item" v-for="(item, index) in swiperList" :key="item.id">
+					<scroll-view 
+						v-if="isShow" 
+						scroll-y="true" 
+						class="page-scroll-view content-fade-in" 
+						@scrolltolower="onreachBottom" 
+						:show-scrollbar="false" 
+						:enhanced="true" 
+						:bounces="true"
+						:upper-threshold="10"
+						:lower-threshold="10">
+						<view class="scroll-content-inner">
+							<view class="banner-floating-card">
+								<u-swiper img-mode="widthFix" :height="350" name="source_url" :list="banner"></u-swiper>
+							</view>
+							
+							<view v-for="(m,index) in list" :key="m.id">
+								<view class="ads">
+									<image class="ads_image" :src="m.source_url" mode="widthFix" />
+								</view>
+								<view class="product-grid-section">
+									<view :class="m.class || 'product-grid'">
+										<!-- 圈出来的商品图标/卡片点击位置 -->
+										<view :class="['product-item', s.class]" v-for="(s,index) in m.child" :key='s.id' @click="changeInfo(s)">
+											<image class="product-img" :src="s.source_url" mode="widthFix" />
+										</view>
+									</view>
+								</view>
+							</view>
+							
+							<!-- 底部安全距离完美适配 -->
+							<view class="bottom-safe-spacer"></view>
+						</view>
+					</scroll-view>
+					
+					<view style="height: 100%;width: 100%;" v-if="!isShow">
+						<view class="loading_box">
+							<view class="loading">
+								<span></span>
+								<span></span>
+								<span></span>
+								<span></span>
+								<span></span>
+							</view>
+							<text class="transition-tip">切换精彩内容...</text>
+						</view>
+					</view>
+				</swiper-item>
+			</swiper>
+		</view>
+
+		<!-- 右侧滑出抽屉 -->
+		<view class="modern-drawer-mask" @click="closeNav()" v-if="navi_slide>0"></view>
+		<view class="modern-drawer-body" v-if="navi_slide>0">
+			<view class="drawer-header">
+				<view class="drawer-title-box">
+					<view class="drawer-icon-dot"></view>
+					<text class="drawer-main-title">快速定位系列</text>
+				</view>
+				<view class="drawer-close-btn d_a_j" @click="closeNav()">
+					<image src="../../static/imgs/cha.png" mode="widthFix" class="close-img"></image>
+				</view>
+			</view>
+			<scroll-view scroll-y="true" class="drawer-scroll-container">
+				<view class="drawer-list-wrapper">
+					<view 
+						class="drawer-item-cell" 
+						:class="{ active: x.id == navi }" 
+						v-for="(x, i) in cats" 
+						:key="x.id || i"
+						@click="clickNav(i)">
+						<text class="cell-text">{{ x.name }}</text>
+						<text class="cell-arrow" v-if="x.id == navi">✦</text>
+					</view>
+				</view>
+			</scroll-view>
+		</view>
+
+		<!-- 商务洽谈弹窗 -->
+		<view>
+			<view class="menu_mask" @click="closeContactModal()" v-if="showContactModal"></view>
+			<view class="contact-modal-box" v-if="showContactModal">
+				<view class="modal-header">
+					<text class="modal-title">商务洽谈与联系</text>
+					<image src="../../static/imgs/cha.png" class="modal-close" @click="closeContactModal()" mode="widthFix"></image>
+				</view>
+				<view class="modal-body">
+					<view class="contact-item" @click="makePhoneCall('18883333289')">
+						<text class="label">联系电话：</text>
+						<text class="value highlight">1888 3333 289</text>
+					</view>
+					<view class="contact-item">
+						<text class="label">微信账号：</text>
+						<text class="value">CABLES1988</text>
+					</view>
+					<view class="contact-item">
+						<text class="label">官方网址：</text>
+						<text class="value">WWW.ELCCC.CN</text>
+					</view>
+					<view class="qrcode-section">
+						<view class="qrcode-box">
+							<image src="/static/imgs/ic_more.png" mode="widthFix" class="qrcode-img" />
+							<text class="qrcode-tip">微信扫一扫加好友</text>
+						</view>
+						<view class="qrcode-box">
+							<image src="/static/imgs/ic_more.png" mode="widthFix" class="qrcode-img" />
+							<text class="qrcode-tip">扫一扫下载易通线缆APP</text>
+						</view>
+					</view>
+				</view>
+			</view>
+		</view>
 	</view>
 </template>
 
@@ -79,25 +181,22 @@
 	import $publicConfig from 'config/publicConfig.js'
 	import uTabs from '../../components/u-tabs/u-tabs.vue'
 	import AMap from '../../common/amapWx.js'
-	// import appUpdate from '@/uni_modules/leruge-app-update/js_sdk/leruge-app-update.js'
-	import silenceUpdate from '@/uni_modules/rt-uni-update/js_sdk/silence-update.js' //引入静默更新
+	import appUpdate from '@/uni_modules/leruge-app-update/js_sdk/leruge-app-update.js'
 	export default {
 		components: {
 			uTabs,
-
 		},
 		data() {
 			return {
-
-				lastIndex: 0, // 上一次显示的 swiper-item 的索引
-
+				lastIndex: 0,
 				title: 'Hello',
 				list: [],
-				label: '成都',
+				label: '成都', 
 				navi: '',
 				banner: [],
 				nav_index: 0,
 				navi_slide: 0,
+				showContactModal: false, 
 				cats: [],
 				swiperList: [{
 					id: '22'
@@ -106,363 +205,358 @@
 				}, {
 					id: 4444
 				}],
-				// 因为内部的滑动机制限制，请将tabs组件和swiper组件的current用不同变量赋值
-				current: 0, // tabs组件的current值，表示当前活动的tab选项
-				swiperCurrent: 0, // swiper组件的current值，表示当前那个swiper-item是活动的
+				current: 0,
+				swiperCurrent: 0,
 				isTabs: false,
 				isShow: true,
 				keyword: '',
 				latitude: '',
 				longitude: '',
-				
+				scrollIntoId: '', 
 				userInfo: uni.getStorageSync('loginTicket'),
-
-
+				switchTimer: null
 			}
 		},
 		async created() {
-			const systemInfo = uni.getSystemInfoSync();
-			const statusBarHeight = systemInfo.statusBarHeight;
-			console.log('状态栏的高度:', statusBarHeight);
-			// this.getLocation()  //华为审核
-			this.checkArea()
-
-
-
-			this.doIninit()
-			
+			this.checkArea();
+			this.doIninit();
 			this.update();
-			
 		},
 		methods: {
 			checkArea(){
 				this.$api.checkArea({new:1}).then(res=>{
-					if(uni.getStorageSync('loginTicket').id){
+					if(uni.getStorageSync('loginTicket').id && res.data){
 						this.$api.regionAdd({
-							uid:uni.getStorageSync('loginTicket').id,
-							prov:res.data.prov,
-							city:res.data.city,
-							label:res.data.label?res.data.label:''
+							uid: uni.getStorageSync('loginTicket').id,
+							prov: res.data.prov,
+							city: res.data.city,
+							label: res.data.label ? res.data.label : ''
 						})
-						this.label=res.data.label?res.data.label:res.data.city
+						this.label = res.data.label ? res.data.label : res.data.city;
 					}
 				})
 			},
 			closeNav() {
-				//console.log(event);
-				//console.log(this.navi);
 				this.navi_slide = 0;
 			},
 			clickNav(index) {
-				console.log(index);
-				console.log(index)
 				this.navi_slide = 0;
-				this.tabsChange(index)
-
-
+				this.tabsChange(index);
+				this.scrollIntoId = '';
+				this.$nextTick(() => {
+					let targetIndex = index > 1 ? index - 1 : 0;
+					this.scrollIntoId = 'cat_item_' + targetIndex;
+				});
 			},
-			/**
-			 * 执行数据
-			 */
 			transData(navData, index) {
 				let that = this;
 				this.navi = navData.id;
 				this.nav_index = index;
 				this.navi_slide = 0;
-				////
-				this.banner = navData.child.banner;
-				this.list = navData.child.list;
-				if (navData.child.banner.length < 1 && navData.child.list.length < 1) {
-					return;
-				}
-
+				
+				const storageKey = `cache_cat_v2_${navData.id}`;
+				
+				this.$api.Cats({
+					catid: navData.id,
+					new: 1,
+				}).then(res => {
+					if (res && res.data && res.data.cats) {
+						let targetCat = res.data.cats.find(item => item.id == navData.id) || res.data.cats[0];
+						if (targetCat && targetCat.child) {
+							const serverChild = targetCat.child;
+							that.banner = serverChild.banner || [];
+							that.list = serverChild.list || [];
+							that.isShow = true;
+							
+							uni.setStorageSync(storageKey, {
+								child: serverChild,
+								updateTime: new Date().getTime()
+							});
+						} else {
+							that.banner = [];
+							that.list = [];
+							that.isShow = true;
+						}
+					}
+				}).catch(err => {
+					console.error('获取分类数据失败', err);
+					try {
+						const localData = uni.getStorageSync(storageKey);
+						if (localData && localData.child) {
+							that.banner = localData.child.banner || [];
+							that.list = localData.child.list || [];
+							that.isShow = true;
+						}
+					} catch(e) {}
+				});
 			},
 			async doIninit() {
 				let ret = await this.$api.Cats({
 					catid: this.navi,
-					new:1,
-				})
+					new: 1,
+				});
 				this.cats = ret.data.cats;
-				this.navi = ret.data.cats[0].id;
-				////
-				let child = ret.data.cats[0]["child"];
-				this.banner = child.banner;
-				this.list = child.list;
-				this.nav_index = 0;
-				this.current = 0
+				if(this.cats && this.cats.length > 0) {
+					this.transData(this.cats[0], 0);
+					this.current = 0;
+				}
 			},
-			// tabs通知swiper切换
 			tabsChange(index) {
 				const mappedIndexList = index % 3;
-
-				this.current = index
-				// 为了触发change 
+				this.current = index;
 				if (mappedIndexList == this.swiperCurrent) {
-					if (mappedIndexList == 0) {
-						this.swiperCurrent = mappedIndexList + 1
-					} else if (mappedIndexList == 1) {
-						this.swiperCurrent = mappedIndexList + 1
+					if (mappedIndexList == 0 || mappedIndexList == 1) {
+						this.swiperCurrent = mappedIndexList + 1;
 					} else if (mappedIndexList == 2) {
-						this.swiperCurrent = 0
+						this.swiperCurrent = 0;
 					}
 				} else {
 					this.swiperCurrent = mappedIndexList;
 				}
 				this.lastIndex = this.swiperCurrent;
-				this.isTabs = true
-				this.list = []
-				this.banner = []
-				this.isShow = false
-				console.log(mappedIndexList + 'tabsChange');
+				this.isTabs = true;
+				this.list = [];
+				this.banner = [];
+				this.isShow = false;
 			},
-			// swiper-item左右移动，通知tabs的滑块跟随移动
-			transition(e) {
-				// let dx = e.detail.dx;
-				// this.$refs.uTabs.setDx(dx);
-			},
-			// 由于swiper的内部机制问题，快速切换swiper不会触发dx的连续变化，需要在结束时重置状态
-			// swiper滑动结束，分别设置tabs和swiper的状态
+			transition(e) {},
 			animationfinish(e) {
 				let current = e.detail.current;
-				// this.$refs.uTabs.setFinishCurrent(current);
 				this.swiperCurrent = current;
-				this.isTabs = false
+				this.isTabs = false;
 				setTimeout(() => {
-					this.isShow = true
-				}, 100)
-
-				// this.current = current;
+					this.isShow = true;
+				}, 150);
 			},
 			swiperChange(e) {
 				if (!this.isTabs) {
 					const currentIndex = e.detail.current;
-					const itemCount = 3; // swiper-item 的总数
+					const itemCount = 3;
 					let direction = '';
-					// 判断滑动方向
 					if (currentIndex === 0 && this.lastIndex === itemCount - 1) {
-						// 特殊情况：从最后一个滑到第一个（循环 swiper）
 						direction = '向左滑动';
 					} else if (currentIndex === itemCount - 1 && this.lastIndex === 0) {
-						// 特殊情况：从第一个滑到最后一个（循环 swiper）
 						direction = '向右滑动';
 					} else if (currentIndex > this.lastIndex) {
-						// 通常情况：索引递增
 						direction = '向左滑动';
 					} else {
-						// 通常情况：索引递减
 						direction = '向右滑动';
 					}
-					console.log(direction); // 输出滑动方向
-					this.list = []
-					this.banner = []
-					this.isShow = false
-					// 更新上一个索引
+					this.list = [];
+					this.banner = [];
+					this.isShow = false;
 					this.lastIndex = currentIndex;
 					if (direction == '向左滑动') {
-						if (this.current == this.cats.length - 1) {
-							this.current = 0
-							this.transData(this.cats[this.current], this.current);
-
-							console.log(this.current);
-							return
-						}
 						if (this.current < this.cats.length - 1) {
-							this.current++
+							this.current++;
+						} else {
+							uni.showToast({
+								title: '没有更多分类了，更多需求随时咨询客服',
+								icon: 'none',
+								duration: 1500
+							});
 						}
 					}
 					if (direction == '向右滑动') {
-						if (this.current == 0) {
-							this.current = this.cats.length - 1
-							this.transData(this.cats[this.current], this.current);
-							return
-						}
 						if (this.current > 0) {
-							this.current--
+							this.current--;
 						}
 					}
-					console.log(this.current);
-				} else {
-
 				}
-
-				this.transData(this.cats[this.current], this.current);
-
-
-
-
-			},
-			// scroll-view到底部加载更多
-			onreachBottom() {
-
-			},
-			getLocation() {
-				console.log(111);
-				let that =this
-				uni.getLocation({
-					type: 'wgs84',
-					success:  (res)=> {
-						console.log('当前位置的经度：' + res.longitude);
-						console.log('当前位置的纬度：' + res.latitude);
-						const latitude = res.latitude;
-						const longitude = res.longitude;
-						const amapKey = 'fa3fef17cc0470481e01b9b0eea509a1';
-						// 构建请求URL
-						const url = `https://restapi.amap.com/v3/geocode/regeo?key=${amapKey}&location=${longitude},${latitude}`;
-						// 使用uni.request进行请求
-						uni.request({
-						    url: url, // 请求的地址
-						    method: 'GET', // 请求方法
-						    success: (res) => {
-						        if (res.statusCode === 200 && res.data && res.data.regeocode) {
-									console.log(res.data)
-									console.log(11111111);
-						            const address = res.data.regeocode.addressComponent.district;
-									this.label=address
-									if(that.userInfo.id){
-										that.$api.regionAdd({
-											new:1,
-											uid:that.userInfo.id,
-											prov:res.data.regeocode.addressComponent.province,
-											city:res.data.regeocode.addressComponent.city,
-											label:res.data.regeocode.addressComponent.district
-										})
-									}
-									
-						        } else {
-						            console.error('解析失败:', res.data);
-						        }
-						    },
-						    fail: (err) => {
-						        console.error('请求失败:', err);
-						    },complete() {
-						    	console.log(1123123123);
-						    }
-						});
-					},fail(err) {
-						if(that.userInfo.id){
-							that.$api.regionAdd({
-								uid:that.userInfo.id,
-								prov:'四川省',
-								city:'成都市',
-								label:''
-							})
-						}
-					}
-				});
 				
+				this.current = this.current;
+				this.navi = this.current;
+				this.scrollIntoId = 'cat_item_' + this.current;
+				this.isShow = false;
+				
+				if (this.switchTimer) {
+					clearTimeout(this.switchTimer);
+				}
+				
+				this.switchTimer = setTimeout(() => {
+					if (this.cats && this.cats[this.current]) {
+						this.transData(this.cats[this.current], this.current);
+					}
+				}, 80);
 			},
-			
-			gotoMsg() {
-				uni.navigateTo({
-					url: '/pages/home/msg'
-				})
-			},
+			onreachBottom() {},
 			gotoSearch() {
 				uni.navigateTo({
 					url: '/pages/home/search'
-				})
+				});
 			},
+			gotoAiAssistant() {
+				uni.navigateTo({
+					url: '/pages/ai/ai_assistant',
+					success: () => {
+						console.log("成功跳转至 AI 智能报价管家页面");
+					},
+					fail: (err) => {
+						console.error("跳转失败", err);
+						uni.showToast({
+							title: 'AI 智能管家正在初始化...',
+							icon: 'none'
+						});
+					}
+				});
+			},
+			openContactModal() {
+				this.showContactModal = true;
+			},
+			closeContactModal() {
+				this.showContactModal = false;
+			},
+			makePhoneCall(phoneNumber) {
+				uni.makePhoneCall({
+					phoneNumber: phoneNumber
+				});
+			},
+			// 👇 修改这里：加入手机振动反馈，同时延长延时让大幅度缩放的动效完整展现
 			changeInfo(info) {
-				let that = this;
-				////
-				if (info.price_type == "3") {
-
-				}
-				if (info.price_type == "2") {
+				if (!info.id) return;
+				
+				// 1. 触发手机短震动（真机/App 环境下有效）
+				uni.vibrateShort({
+					success: function () {
+						// 振动成功
+					}
+				});
+				
+				// 2. 稍微增加一点延时（320毫秒），让用户能清晰感受到大幅度缩放松开后的视觉反馈再跳转
+				setTimeout(() => {
 					uni.navigateTo({
-						url: '/pages/shops/shop_lists?ids=' + info.id + "&type=" + info.price_type
-					})
-				}
-				if (info.price_type == "1") {
-
-				}
+						url: '/pages/shops/shop_lists?ids=' + info.id + "&type=" + (info.price_type || '')
+					});
+				}, 320);
 			},
 			slideNav() {
-				let that = this;
-				////
-				that.navi_slide = 1;
+				this.navi_slide = 1;
 			},
 			async update() {
-				// let code  = plus.runtime.version;
 				let code = $publicConfig.version;
-				console.log(111);
-				console.log(code);
-				let system =''
+				let system = '';
 				// #ifdef APP-IOS
-				  system=2
+				system = 2;
 				// #endif
 				// #ifdef APP-ANDROID
-				 system=1
+				system = 1;
 				// #endif
 				
-				
-				
-				 this.$api.update_version({
+				this.$api.update_version({
 					version: code,
-					system:system,
-					new:1,
+					system: system,
+					new: 1,
 				}).then(res=>{
-					console.log(res);	
 					if(res.data){
-						// let updateInfo = {
-						// 	platform:system==1?'android':'ios',
-						// 	updateContent: res.data.prompt,
-						// 	downUrl: res.data.url,
-						// 	version: res.data.version,
-						// 	force: res.data.is_mandatory==1?false:true,
-						// 	mainColor: 'FF5B78',
-						// }
-						// appUpdate(updateInfo)
-						
-						// if (Number(res.data.data.edition_number) > Number(inf.versionCode) && res
-						// 	.data.data.edition_issue == 1) {
-						
-							//如果是wgt升级，并且是静默更新 （注意！！！ 如果是手动检查新版本，就不用判断静默更新，请直接跳转更新页，不然点击检查新版本后会没反应）
-							if (res.data.package_type == 1 && res.data.edition_silence == 1) {
-						
-								//调用静默更新方法 传入下载地址
-								silenceUpdate(res.data.url)
-						
-							} else {
-								console.log(11223456789);
-								//跳转更新页面 （注意！！！如果pages.json第一页的代码里有一打开就跳转其他页面的操作，下面这行代码最好写在setTimeout里面设置延时3到5秒再执行）
-								uni.navigateTo({
-									url: '/uni_modules/rt-uni-update/components/rt-uni-update/rt-uni-update?obj=' +
-										JSON.stringify(res.data)
-								});
-							}
-						// } else {
-						
-						// 	// 如果是手动检查新版本 需开启以下注释
-						// 	/* uni.showModal({
-						// 		title: '提示',
-						// 		content: '已是最新版本',
-						// 		showCancel: false
-						// 	}) */
-						// }
+						let updateInfo = {
+							platform: system == 1 ? 'android' : 'ios',
+							updateContent: res.data.prompt,
+							downUrl: res.data.url,
+							version: res.data.version,
+							force: res.data.is_mandatory == 1 ? false : true,
+							mainColor: 'FF5B78',
+						};
+						appUpdate(updateInfo);
 					}
-					
-					
-				})
-				
+				});
 			},
 		}
 	}
 </script>
 
 <style scoped lang="scss">
-	.custom-class {
-		padding-top: var(--status-bar-height);
+	.wrap {
+		display: flex;
+		flex-direction: column;
+		height: 100vh;
+		width: 100vw;
+		background-color: #fcfcfc;
+		overflow: hidden;
+		position: fixed;
+		top: 0;
+		left: 0;
+		box-sizing: border-box;
+		pointer-events: auto !important; 
+	}
+
+	.top-header-fixed-wrap {
+	    position: absolute;
+	    top: var(--status-bar-height);
+	    left: 0;
+	    width: 100%;
+	    z-index: 99999; 
+	    background-color: #ffffff;
+	    pointer-events: auto !important; 
+	    touch-action: manipulation;
+	}
+
+	.main-swiper-container {
+		position: absolute;
+		top: calc(var(--status-bar-height) + 86rpx + 92rpx);
+		left: 0;
+		width: 100vw;
+		bottom: 0;
+		overflow: hidden;
+		background-color: #fcfcfc;
+	}
+
+	.swiper-box {
+		height: 100%;
+		width: 100%;
+	}
+
+	.swiper-item {
+		height: 100%;
+		width: 100%;
+		overflow: hidden;
+	}
+
+	.page-scroll-view {
+		height: 100%;
+		width: 100%;
+		box-sizing: border-box;
+		-webkit-overflow-scrolling: touch;
+	}
+
+	@keyframes contentFadeIn {
+		from {
+			opacity: 0;
+			transform: scale(0.98);
+		}
+		to {
+			opacity: 1;
+			transform: scale(1);
+		}
+	}
+
+	.content-fade-in {
+		animation: contentFadeIn 0.28s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+	}
+
+	.scroll-content-inner {
+		padding-top: 16rpx; 
+		padding-bottom: 110rpx; 
 	}
 
 	.loading_box {
-		padding: 100rpx 0rem;
+		padding: 180rpx 0;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		
+		.transition-tip {
+			margin-top: 24rpx;
+			font-size: 24rpx;
+			color: #9aa1a9;
+			letter-spacing: 1rpx;
+		}
 	}
 
 	.loading {
 		width: 750rpx;
 		height: 20rpx;
-		margin: 0rem auto;
+		margin: 0 auto;
 		text-align: center;
 	}
 
@@ -471,7 +565,8 @@
 		width: 20rpx;
 		height: 20rpx;
 		margin-right: 10rpx;
-		background: #c20f22;
+		background: #0052d9;
+		border-radius: 50%;
 		-webkit-animation: load 1.04s ease infinite;
 	}
 
@@ -480,269 +575,556 @@
 	}
 
 	@-webkit-keyframes load {
-		0% {
-			opacity: 1;
+		0% { opacity: 1; transform: scale(1); }
+		50% { opacity: 0.3; transform: scale(0.8); }
+		100% { opacity: 1; transform: scale(1); }
+	}
+
+	.loading span:nth-child(1) { -webkit-animation-delay: 0.13s; }
+	.loading span:nth-child(2) { -webkit-animation-delay: 0.26s; }
+	.loading span:nth-child(3) { -webkit-animation-delay: 0.39s; }
+	.loading span:nth-child(4) { -webkit-animation-delay: 0.52s; }
+	.loading span:nth-child(5) { -webkit-animation-delay: 0.65s; }
+
+	.top-header-section {
+		background: #ffffff;
+		padding: 10rpx 16rpx 8rpx 16rpx; 
+		box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.03);
+
+		.search {
+			background: #ffffff;
+			box-sizing: border-box;
+			display: flex;
+			align-items: center;
+			justify-content: space-between; 
+			width: 100%;
+			gap: 150rpx;
+				
+			.search_input {
+				position: relative;
+				cursor: pointer;
+				background-color: #f7f8fa;
+				border-radius: 34rpx;
+				padding: 0 20rpx;
+				height: 66rpx;
+				flex: 1;
+				display: flex;
+				align-items: center;
+				pointer-events: auto !important;
+				z-index: 99999;
+				transform: translateZ(0);
+				touch-action: manipulation;
+
+				&:active {
+					opacity: 0.8;
+					transform: scale(0.98);
+				}
+
+				.search-inner-box {
+					display: flex;
+					align-items: center;
+					width: 100%;
+					pointer-events: none !important;
+
+					.sh-icon {
+						width: 28rpx;
+						height: 28rpx;
+						margin-right: 10rpx;
+						opacity: 0.5;
+					}
+
+					.sh-placeholder {
+						font-size: 25rpx;
+						color: #9aa1a9;
+						white-space: nowrap;
+						overflow: hidden;
+						text-overflow: ellipsis;
+					}
+				}
+
+				.search-click-shield {
+					position: absolute;
+					top: 0;
+					left: 0;
+					width: 100%;
+					height: 100%;
+					z-index: 99999;
+					background: transparent;
+					pointer-events: auto !important;
+					transform: translateZ(0);
+					touch-action: manipulation;
+				}
+			}
+
+			.top-right-group {
+					display: flex;
+					align-items: center;
+					flex-shrink: 0;
+
+				.ai-smart-badge {
+						position: relative;
+						left: -70rpx;        
+						height: 66rpx;
+						padding: 0 22rpx 0 8rpx;
+					border-radius: 33rpx;
+					background: linear-gradient(135deg, #f0f4ff 0%, #e6efff 100%);
+					border: 1rpx solid rgba(0, 82, 217, 0.2);
+					box-shadow: 0 2rpx 8rpx rgba(0, 82, 217, 0.08);
+					display: flex;
+					align-items: center;
+					gap: 10rpx;
+					transition: all 0.2s ease;
+
+					&:active {
+						transform: scale(0.96);
+						background: linear-gradient(135deg, #e2eafc, #d5e3fc);
+					}
+
+					.ai-icon-wrap {
+											width: 48rpx;
+											height: 48rpx;
+											border-radius: 50%;
+											overflow: hidden; /* 确保图片超出圆形部分被裁剪 */
+											box-shadow: 0 2rpx 6rpx rgba(0, 82, 217, 0.3);
+											flex-shrink: 0;
+											display: flex;
+											align-items: center;
+											justify-content: center;
+					
+											.ai-logo-img {
+												width: 100%;
+												height: 100%;
+												display: block;
+											}
+										}
+
+					.ai-text-box {
+						display: flex;
+						flex-direction: column;
+						justify-content: center;
+						white-space: nowrap;
+
+						.ai-title {
+							font-size: 25rpx;
+							font-weight: 600;
+							color: #0040a5;
+							letter-spacing: 0.5rpx;
+							line-height: 1.2;
+						}
+					}
+
+					.ai-pulse-dot {
+						width: 8rpx;
+						height: 8rpx;
+						background: #10b981;
+						border-radius: 50%;
+						box-shadow: 0 0 6rpx #10b981;
+						margin-left: 2rpx;
+					}
+				}
+			}
 		}
-
-		100% {
-			opacity: 0;
-		}
 	}
 
-	.loading span:nth-child(1) {
-		-webkit-animation-delay: 0.13s;
-	}
-
-	.loading span:nth-child(2) {
-		-webkit-animation-delay: 0.26s;
-	}
-
-	.loading span:nth-child(3) {
-		-webkit-animation-delay: 0.39s;
-	}
-
-	.loading span:nth-child(4) {
-		-webkit-animation-delay: 0.52s;
-	}
-
-	.loading span:nth-child(5) {
-		-webkit-animation-delay: 0.65s;
-	}
-
-	.wrap {
-		display: flex;
-		flex-direction: column;
-		height: calc(100vh - 60px);
-		width: 100%;
-	}
-
-	.tabs {
-		width: 690rpx;
-		margin: 0 auto;
-		height: 100rpx;
-	}
-
-	.swiper-box {
-		flex: 1;
-	}
-
-	.swiper-item {
-		height: 100%;
-	}
-
-	.search {
-		background: #f8f8f8;
-		box-sizing: border-box;
-		padding: 0rem 20rpx;
+	.modern-tabs-section {
+		background: #ffffff;
 		display: flex;
 		align-items: center;
+		height: 92rpx;
+		border-bottom: 1rpx solid #f1f3f5;
+		position: relative;
+		padding: 0 10rpx 0 16rpx;
+		box-shadow: 0 6rpx 16rpx rgba(0, 0, 0, 0.03);
 
+		.tabs-scroll-wrapper {
+			flex: 1;
+			overflow: hidden;
+			height: 100%;
+
+			.custom-cat-scroll {
+				width: 100%;
+				height: 100%;
+				white-space: nowrap;
+
+				.cat-pill-list {
+					display: inline-flex;
+					align-items: center;
+					height: 100%;
+					gap: 16rpx;
+					padding-right: 20rpx;
+
+					.cat-pill-item {
+						padding: 0 28rpx;
+						height: 60rpx;
+						background: #f7f8fa;
+						border-radius: 30rpx;
+						display: inline-flex;
+						align-items: center;
+						justify-content: center;
+						transition: all 0.25s ease;
+
+						.pill-text {
+							font-size: 27rpx;
+							color: #4a5568;
+							font-weight: 500;
+							white-space: nowrap;
+						}
+
+						&.active {
+							background: linear-gradient(135deg, #0052d9, #0077ff);
+							box-shadow: 0 4rpx 12rpx rgba(0, 119, 255, 0.3);
+
+							.pill-text {
+								color: #ffffff;
+								font-weight: bold;
+							}
+						}
+					}
+				}
+			}
+		}
+
+		.quick-drawer-floating-island {
+			width: 96rpx;
+			height: 100%;
+			flex-shrink: 0;
+			background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.85) 25%, #ffffff 100%);
+			z-index: 10;
+			cursor: pointer;
+
+			.island-trigger-content {
+				display: flex;
+				align-items: center;
+				gap: 6rpx;
+				transition: opacity 0.2s;
+
+				&:active {
+					opacity: 0.6;
+				}
+
+				.tech-matrix-svg {
+					width: 32rpx;
+					height: 32rpx;
+					flex-shrink: 0;
+					display: block;
+				}
+
+				.island-label {
+					font-size: 24rpx;
+					color: #4a5568;
+					font-weight: 500;
+					white-space: nowrap;
+				}
+			}
+		}
 	}
 
-	.search_loc {
-		display: inline-block;
-		height: 50rpx;
-		padding-right: 1rem;
-	}
-
-	.search_loc_image {
-		margin-right: 10rpx;
-		vertical-align: middle;
-		width: 40rpx;
-		height: 40rpx;
-	}
-
-	.search_input {
-		background-color: #ffffff;
-		padding-left: 20rpx;
-		padding-right: 20rpx;
-		flex: 1;
-	}
-
-	.search_input image.sh {
-		height: 2.1rem;
-		width: 2.1rem;
-	}
-
-	.search_msg {
-		display: flex;
-		align-items: center;
-		height: 4.4rem;
-		text-align: right;
-		width: 9%;
-	}
-
-	.search_msg image {
-		vertical-align: middle;
-		width: 2.1rem;
-	}
-
-	/** Menu Slides **/
-	.menu_scroll {
-		height: 4rem;
-		padding: 0px;
+	.banner-floating-card {
+		margin: 12rpx 16rpx 16rpx 16rpx;
+		border-radius: 16rpx;
 		overflow: hidden;
-		position: sticky;
-		top: 0rem;
+		background-color: #ffffff;
+		height: 350rpx;
+		flex-shrink: 0;
+		box-shadow: 0 8rpx 24rpx rgba(0, 0, 0, 0.08), 0 2rpx 6rpx rgba(0, 0, 0, 0.04);
+
+		::v-deep .u-swiper-wrap {
+			border-radius: 16rpx;
+			overflow: hidden;
+			height: 100% !important;
+		}
+		
+		::v-deep image {
+			border-radius: 16rpx;
+		}
 	}
 
-	.menu_scroll .toolbar-background-ios {
-		background: white;
+	.product-grid-section {
+		padding: 10rpx;
+		background-color: #fcfcfc; 
 	}
 
-	.menu_scroll ion-slides {
-		width: 85%;
+	.product-grid {
+		display: flex;
+		flex-wrap: wrap;
+		justify-content: space-between;
 	}
 
-	.menu_scroll span {
-		border-bottom: 1px solid white;
-		display: inline-block;
-		font-size: 1.6rem;
-		padding: 0.8rem 0rem;
-		text-align: center;
+	.product-item {
+		background-color: #ffffff; 
+		border-radius: 12rpx;
+		overflow: hidden; 
+		border: none;
+		box-shadow: none;
+		position: relative;
+		flex-shrink: 0;
+		min-height: 200rpx;
+		/* 动画过渡：使用具有弹性的贝塞尔曲线，时长稍微拉开到 0.3s */
+		transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s ease;
+
+		.product-img {
+			width: 100%;
+			height: auto;
+			display: block; 
+			flex-shrink: 0;
+		}
+
+		/* 👇 修改这里：把原本的 scale(0.96) 改为大幅度缩小的 scale(0.85)，点击时整块商品缩得很明显，松手再弹回 */
+		&:active {
+			transform: scale(0.85);
+			opacity: 0.7;
+		}
 	}
 
-	.menu_scroll span.active {
-		border-color: #c20f22;
-		color: #c20f22;
-		font-weight: bold;
-	}
-
-	.menu_scroll ion-scroll::-webkit-scrollbar {
-		display: none !important;
-	}
-
-	.menu_right {
-		height: 4.4rem;
-		line-height: 4.2rem;
-		position: absolute;
-		top: 0rem;
-		right: 1.2rem;
-	}
-
-	.menu_right image {
-		vertical-align: middle;
-		width: 2.2rem;
-	}
-
-	.menu_mask {
-		background: black;
-		bottom: 0rem;
-		opacity: 0.3;
+	.modern-drawer-mask {
+		background: rgba(0, 0, 0, 0.45);
+		backdrop-filter: blur(2px);
+		bottom: 0;
+		opacity: 1;
 		position: fixed;
-		top: 0rem;
+		top: 0;
+		left: 0;
+		right: 0;
 		width: 100%;
 		z-index: 200;
+		transition: all 0.3s ease;
 	}
 
-	.menu_body {
-		background: white;
-		border-top-left-radius: 1rem;
-		border-bottom-left-radius: 1rem;
-		bottom: 10%;
+	.modern-drawer-body {
+		background: #ffffff;
+		border-top-left-radius: 20rpx;
+		border-bottom-left-radius: 20rpx;
+		top: calc(var(--status-bar-height) + 86rpx + 92rpx);
+		bottom: 0;
 		position: fixed;
-		top: 10%;
-		text-align: center;
-		right: 0rem;
-		width: 40%;
-		z-index: 202;
+		right: 0;
+		width: 50vw;
+		z-index: 9999;
+		display: flex;
+		flex-direction: column;
+		box-shadow: -10rpx 0 30rpx rgba(0, 0, 0, 0.12);
+		animation: drawerSlideIn 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+
+		.drawer-header {
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			padding: 24rpx 20rpx 18rpx 24rpx;
+			border-bottom: 1rpx solid #f1f3f5;
+
+			.drawer-title-box {
+				display: flex;
+				align-items: center;
+				gap: 10rpx;
+
+				.drawer-icon-dot {
+					width: 10rpx;
+					height: 10rpx;
+					background: #0052d9;
+					border-radius: 50%;
+					box-shadow: 0 0 8rpx rgba(0, 82, 217, 0.5);
+					flex-shrink: 0;
+				}
+
+				.drawer-main-title {
+					font-size: 26rpx;
+					font-weight: bold;
+					color: #1a202c;
+					letter-spacing: 0.5rpx;
+					white-space: nowrap;
+				}
+			}
+
+			.drawer-close-btn {
+				width: 40rpx;
+				height: 40rpx;
+				background: #f1f3f5;
+				border-radius: 50%;
+				flex-shrink: 0;
+
+				.close-img {
+					width: 20rpx;
+					height: 20rpx;
+					opacity: 0.6;
+				}
+			}
+		}
+
+		.drawer-scroll-container {
+			flex: 1;
+			height: 0;
+
+			.drawer-list-wrapper {
+				padding: 16rpx;
+				display: flex;
+				flex-direction: column;
+				gap: 12rpx;
+
+				.drawer-item-cell {
+					display: flex;
+					align-items: center;
+					justify-content: space-between;
+					padding: 0 20rpx;
+					height: 76rpx;
+					background: #f8fafc;
+					border-radius: 12rpx;
+					transition: all 0.2s ease;
+
+					.cell-text {
+						font-size: 26rpx;
+						color: #4a5568;
+						font-weight: 500;
+						overflow: hidden;
+						text-overflow: ellipsis;
+						white-space: nowrap;
+					}
+
+					.cell-arrow {
+						font-size: 22rpx;
+						color: #0052d9;
+						flex-shrink: 0;
+					}
+
+					&.active {
+						background: linear-gradient(135deg, rgba(0,82,217,0.08), rgba(0,119,255,0.12));
+						border: 1rpx solid rgba(0, 82, 217, 0.3);
+
+						.cell-text {
+							color: #0052d9;
+							font-weight: bold;
+						}
+					}
+
+					&:active {
+						transform: scale(0.98);
+					}
+				}
+			}
+		}
 	}
 
-	.menu_body_title {
-		border-bottom: 1px solid #999;
-		color: #419afe;
-		font-size: 1.5rem;
-		height: 4rem;
-		line-height: 4rem;
+	@keyframes drawerSlideIn {
+		from {
+			transform: translateX(100%);
+		}
+		to {
+			transform: translateX(0);
+		}
 	}
 
-	.menu_body_title .fa {
-		color: #c20f22;
-	}
-
-	.menu_body_list {
-		font-size: 1.3rem;
-		height: 4rem;
-		line-height: 4rem;
-	}
-
-	.menu_body_list.active {
-		background: #e5e5e5;
-		color: #c20f22;
-		font-weight: bold;
-	}
-
-	/** Navigation **/
-	.navigation {
-		display: block;
-		font-size: 1.5rem;
-	}
-
-	.navigation_item {
-		font-size: 1.5rem;
-		position: relative;
-	}
-
-	.navigation_item.active {
-		color: #c20f22;
-	}
-
-	.navigation_item.active:after {
-		background: #c20f22;
-		border-radius: 0.4rem;
-		bottom: 0.4rem;
-		content: " ";
-		display: table;
+	.contact-modal-box {
+		position: fixed;
+		top: 50%;
 		left: 50%;
-		margin-left: -0.8rem;
-		height: 0.4rem;
-		position: absolute;
-		width: 1.6rem;
-	}
-
-	/** lists-slide **/
-	.list {
-		min-height: 100%;
-	}
-
-	.navi_slide {
-		border-radius: 0.5rem;
+		transform: translate(-50%, -50%);
+		width: 85%;
+		max-width: 620rpx;
+		background: #ffffff;
+		border-radius: 24rpx;
+		z-index: 205;
 		overflow: hidden;
-		padding: 0.85rem 1.2rem;
+		box-shadow: 0 10rpx 30rpx rgba(0, 0, 0, 0.15);
+
+		.modal-header {
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			padding: 24rpx 32rpx;
+			border-bottom: 1rpx solid #edf2f7;
+			background: #f8fafc;
+
+			.modal-title {
+				font-size: 32rpx;
+				font-weight: bold;
+				color: #1a202c;
+			}
+
+			.modal-close {
+				width: 36rpx;
+				height: 36rpx;
+				opacity: 0.6;
+			}
+		}
+
+		.modal-body {
+			padding: 32rpx;
+
+			.contact-item {
+				transition: all 0.2s ease;
+				display: flex;
+				align-items: center;
+				margin-bottom: 24rpx;
+				font-size: 28rpx;
+
+				.label {
+					color: #718096;
+					width: 170rpx;
+				}
+
+				.value {
+					color: #2d3748;
+					font-weight: 500;
+
+					&.highlight {
+						color: #e53e3e;
+						font-weight: bold;
+					}
+				}
+			}
+
+			.qrcode-section {
+				display: flex;
+				justify-content: space-between;
+				margin-top: 32rpx;
+				border-top: 1rpx dashed #e2e8f0;
+				padding-top: 24rpx;
+
+				.qrcode-box {
+					display: flex;
+					flex-direction: column;
+					align-items: center;
+					flex: 1;
+
+					.qrcode-img {
+						width: 180rpx;
+						height: 180rpx;
+						border-radius: 12rpx;
+						border: 1rpx solid #e2e8f0;
+						padding: 8rpx;
+						background: #fff;
+					}
+
+					.qrcode-tip {
+						display: block;
+						margin-top: 12rpx;
+						font-size: 22rpx;
+						color: #718096;
+						text-align: center;
+					}
+				}
+			}
+		}
 	}
 
-	.navi_slide_item {
-		border-radius: 0.5rem;
-		overflow: hidden;
-	}
-
-	.navi_slide_item image {
-		vertical-align: middle;
-		width: 100%;
-	}
-
-	.navi_slide .swiper-pagination-bullet {
-		background: white;
-	}
-
-	.navi_slide .swiper-pagination-bullet-active {
-		background: #c20f22;
-	}
-
-	.slide-box {
-		min-height: 50rem;
-	}
-
-	.slide-zoom {
-		height: 100%;
-	}
-
-	/** ads **/
 	.ads {
 		width: 100%;
+		overflow: hidden; 
+		background-color: #f7f8fa; 
+		flex-shrink: 0;
+		min-height: 100rpx;
 	}
 
 	.ads_image {
 		width: 100%;
+		height: auto;
+		display: block; 
+		flex-shrink: 0;
+	}
+
+	.tech-matrix-svg-img {
+		width: 32rpx;
+		height: 32rpx;
+		flex-shrink: 0;
+		display: block;
 	}
 </style>

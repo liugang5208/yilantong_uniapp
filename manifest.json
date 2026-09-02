@@ -49,7 +49,8 @@
                 ],
                 "minSdkVersion" : 29,
                 "maxSdkVersion" : 34,
-                "targetSdkVersion" : 33
+                "targetSdkVersion" : 33,
+                "abiFilters" : [ "armeabi-v7a", "arm64-v8a", "x86" ]
             },
             /* ios打包配置 */
             "ios" : {

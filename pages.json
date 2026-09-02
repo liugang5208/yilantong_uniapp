@@ -1,301 +1,311 @@
 {
-	"easycom": {
-		"^u-(.*)": "uview-ui/components/u-$1/u-$1.vue"
-	},
-	"pages": [ //pages数组中第一项表示应用启动页，参考：https://uniapp.dcloud.io/collocation/pages
-		{
-			"path": "pages/welcome/welcome",
-			"style": {
-				"navigationStyle": "custom"
-			}
-		},
-		{
-			"path": "pages/index/index",
-			"style": {
-				"enablePullDownRefresh": false,
-				"navigationStyle": "custom"
-			}
-		},
-		{
-			"path": "pages/login_md/login_md",
-			"style": {
-				"navigationBarTitleText": "",
-				"navigationStyle": "custom"
-			}
-		},
-		{
-			"path": "pages/login_md/regtool/regtool",
-			"style": {
-				"navigationBarTitleText": "易览通APP使用条款",
-				"enablePullDownRefresh": false
-			}
-		},
-		{
-			"path": "pages/poindex/poindex",
-			"style": {
-				"navigationBarTitleText": "",
-				"enablePullDownRefresh": false,
-				"navigationStyle": "custom"
-			}
-		},
-		{
-			"path": "pages/poindex/poedit/poedit",
-			"style": {
-				"navigationBarTitleText": "",
-				"navigationStyle": "custom"
-			}
-		},
-
-		{
-			"path": "pages/cart/cart",
-			"style": {
-				"navigationStyle": "custom"
-			}
-		},
-		{
-			"path": "pages/cart/confirm",
-			"style": {
-				"navigationStyle": "custom"
-			}
-		},
-		{
-			"path": "pages/shops/shop_lists",
-			"style": {
-				"navigationStyle": "custom"
-			}
-		},
-		{
-			"path": "pages/report/repinfos",
-			"style": {
-				"navigationBarTitleText": "报价单详情页",
-				"enablePullDownRefresh": false
-			}
-		},
-		{
-			"path": "pages/report/manageTableLogo",
-			"style": {
-				"navigationStyle": "custom"
-			}
-		},
-		{
-			"path": "pages/report/repindex",
-			"style": {
-				"navigationStyle": "custom"
-			}
-		},
-		{
-			"path": "pages/report/repdata",
-			"style": {
-				"navigationBarTitleText": "报价单详情页",
-				"enablePullDownRefresh": false
-			}
-		},
-		{
-			"path": "pages/my/adindex/adindex",
-			"style": {
-				"navigationStyle": "custom"
-			}
-		},
-		{
-			"path": "pages/my/tiindex/tiindex",
-			"style": {
-				"navigationStyle": "custom"
-			}
-		},
-		{
-			"path": "pages/my/heindex/heindex",
-			"style": {
-				"navigationBarTitleText": "帮助中心",
-				"enablePullDownRefresh": false
-			}
-		},
-		{
-			"path": "pages/my/setindex/setindex",
-			"style": {
-				"navigationBarTitleText": "设置",
-				"enablePullDownRefresh": false
-			}
-		},
-		{
-			"path": "pages/my/order/order",
-			"style": {
-				"navigationBarTitleText": "我的订单",
-				"enablePullDownRefresh": false
-			}
-		},
-		{
-			"path": "pages/my/order/infos",
-			"style": {
-				"navigationBarTitleText": "订单详情",
-				"enablePullDownRefresh": false
-			}
-		},
-		{
-			"path": "pages/my/adindex/adadds",
-			"style": {
-				"navigationStyle": "custom"
-			}
-		},
-		{
-			"path": "pages/my/adindex/adedit",
-			"style": {
-				"navigationStyle": "custom"
-			}
-		},
-		{
-			"path" : "pages/my/setindex/setcuetom",
-			"style" : 
-			{
-				"navigationBarTitleText" : "客服中心",
-				"enablePullDownRefresh" : false
-			}
-		},
-		{
-			"path" : "pages/my/setindex/setabout",
-			"style" : 
-			{
-				"navigationBarTitleText" : "关于易缆通APP",
-				"enablePullDownRefresh" : false
-			}
-		},
-		{
-			"path" : "pages/my/heindex/heinfo",
-			"style" : 
-			{
-				"navigationBarTitleText" : "帮助中心",
-				"enablePullDownRefresh" : false
-			}
-		},
-		{
-			"path" : "pages/report/noteInformation",
-			"style" : 
-			{
-				"navigationStyle": "custom"
-			}
-		},
-		{
-			"path" : "pages/home/search",
-			"style" : 
-			{
-				"navigationBarTitleText" : "搜索",
-				"enablePullDownRefresh" : false
-			}
-		},
-		{
-			"path" : "pages/home/msg",
-			"style" : 
-			{
-				"navigationStyle": "custom"
-			}
-		},
-		{
-			"path" : "pages/home/msginfo",
-			"style" : 
-			{
-				"navigationBarTitleText" : "消息详情",
-				"enablePullDownRefresh" : false
-			}
-		},
-		{
-			"path" : "pages/my/tiindex/tiadds",
-			"style" : 
-			{
-				"navigationBarTitleText" : "添加发票资料",
-				"enablePullDownRefresh" : false
-			}
-		},
-		{
-			"path" : "pages/my/tiindex/tiedit",
-			"style" : 
-			{
-				"navigationBarTitleText" : "修改发票资料",
-				"enablePullDownRefresh" : false
-			}
-		},
-		{
-			"path" : "pages/login_md/regirest",
-			"style" : 
-			{
-				"navigationStyle": "custom"
-			}
-		},
-		{
-			"path" : "pages/login_md/login",
-			"style" : 
-			{
-				"navigationStyle": "custom"
-			}
-		},
-		{
-			"path" : "pages/login_md/passwd",
-			"style" : 
-			{
-				"navigationStyle": "custom"
-			}
-		},
-		{
-			"path" : "pages/trans/trans",
-			"style" : 
-			{
-				"navigationBarTitleText" : "",
-				"enablePullDownRefresh" : false
-			}
-		},
-		{
-			"path" : "pages/shops/shop_more",
-			"style" : 
-			{
-				"navigationStyle": "custom"
-			}
-		},
-		{
-			"path" : "pages/my/pohead",
-			"style" : 
-			{
-				"navigationBarTitleText" : "修改个人头像",
-				"enablePullDownRefresh" : false
-			}
-		},
-		{
-			"path": "pages/my/u-avatar-cropper",
-			"style": {
-				"navigationBarTitleText": "裁剪",
-				"navigationBarBackgroundColor": "#000000"
-			}
-		}
-
-	,{
-    "path": "uni_modules/rt-uni-update/components/rt-uni-update/rt-uni-update",
-    "style": {
-        "app-plus": {
-            "animationDuration": 200,
-            "animationType": "fade-in",
-            "background": "transparent",
-            "backgroundColorTop": "transparent",
-            "popGesture": "none",
-            "scrollIndicator": false,
-            "titleNView": false
+    "easycom" : {
+        "^u-(.*)" : "uview-ui/components/u-$1/u-$1.vue"
+    },
+    "pages" : [
+        //pages数组中第一项表示应用启动页，参考：https://uniapp.dcloud.io/collocation/pages
+        {
+            "path" : "pages/welcome/welcome",
+            "style" : {
+                "navigationStyle" : "custom"
+            }
         },
-        "disableScroll": true
+        {
+            "path" : "pages/index/index",
+            "style" : {
+                "enablePullDownRefresh" : false,
+                "navigationStyle" : "custom",
+                "popGesture" : "none"
+            }
+        },
+        {
+            "path" : "pages/login_md/login_md",
+            "style" : {
+                "navigationBarTitleText" : "",
+                "navigationStyle" : "custom"
+            }
+        },
+        {
+            "path" : "pages/login_md/regtool/regtool",
+            "style" : {
+                "navigationBarTitleText" : "易览通APP使用条款",
+                "enablePullDownRefresh" : false
+            }
+        },
+        {
+            "path" : "pages/poindex/poindex",
+            "style" : {
+                "navigationBarTitleText" : "",
+                "enablePullDownRefresh" : false,
+                "navigationStyle" : "custom"
+            }
+        },
+        {
+            "path" : "pages/poindex/poedit/poedit",
+            "style" : {
+                "navigationBarTitleText" : "",
+                "navigationStyle" : "custom"
+            }
+        },
+        {
+            "path" : "pages/cart/cart",
+            "style" : {
+                "navigationStyle" : "custom",
+                "popGesture" : "none"
+            }
+        },
+        {
+            "path" : "pages/cart/confirm",
+            "style" : {
+                "navigationStyle" : "custom"
+            }
+        },
+        {
+            "path" : "pages/shops/shop_lists",
+            "style" : {
+                "navigationStyle" : "custom"
+            }
+        },
+        {
+            "path" : "pages/report/repinfos",
+            "style" : {
+                "navigationBarTitleText" : "报价单详情页",
+                "enablePullDownRefresh" : false
+            }
+        },
+        {
+            "path" : "pages/report/manageTableLogo",
+            "style" : {
+                "navigationStyle" : "custom"
+            }
+        },
+        {
+            "path" : "pages/report/repindex",
+            "style" : {
+                "navigationStyle" : "custom"
+            }
+        },
+        {
+            "path" : "pages/report/repdata",
+            "style" : {
+                "navigationBarTitleText" : "报价单详情页",
+                "enablePullDownRefresh" : false
+            }
+        },
+        {
+            "path" : "pages/my/adindex/adindex",
+            "style" : {
+                "navigationStyle" : "custom"
+            }
+        },
+        {
+            "path" : "pages/my/tiindex/tiindex",
+            "style" : {
+                "navigationStyle" : "custom"
+            }
+        },
+        {
+            "path" : "pages/my/heindex/heindex",
+            "style" : {
+                "navigationBarTitleText" : "帮助中心",
+                "enablePullDownRefresh" : false
+            }
+        },
+        {
+            "path" : "pages/my/setindex/setindex",
+            "style" : {
+                "navigationBarTitleText" : "设置",
+                "enablePullDownRefresh" : false
+            }
+        },
+        {
+            "path" : "pages/my/order/order",
+            "style" : {
+                "navigationBarTitleText" : "我的订单",
+                "enablePullDownRefresh" : false
+            }
+        },
+        {
+            "path" : "pages/my/order/infos",
+            "style" : {
+                "navigationBarTitleText" : "订单详情",
+                "enablePullDownRefresh" : false
+            }
+        },
+        {
+            "path" : "pages/my/adindex/adadds",
+            "style" : {
+                "navigationStyle" : "custom"
+            }
+        },
+        {
+            "path" : "pages/my/adindex/adedit",
+            "style" : {
+                "navigationStyle" : "custom"
+            }
+        },
+        {
+            "path" : "pages/my/setindex/setfeedback",
+            "style" : {
+                "navigationBarTitleText" : "意见反馈",
+                "enablePullDownRefresh" : false
+            }
+        },
+        {
+            "path" : "pages/my/setindex/setcuetom",
+            "style" : {
+                "navigationBarTitleText" : "客服中心",
+                "enablePullDownRefresh" : false
+            }
+        },
+        {
+            "path" : "pages/my/setindex/setabout",
+            "style" : {
+                "navigationBarTitleText" : "关于易缆通APP",
+                "enablePullDownRefresh" : false
+            }
+        },
+        {
+            "path" : "pages/my/heindex/heinfo",
+            "style" : {
+                "navigationBarTitleText" : "帮助中心",
+                "enablePullDownRefresh" : false
+            }
+        },
+        {
+            "path" : "pages/report/noteInformation",
+            "style" : {
+                "navigationStyle" : "custom"
+            }
+        },
+        {
+            "path" : "pages/home/search",
+            "style" : {
+                "navigationStyle" : "custom",
+                "navigationBarTitleText" : ""
+            }
+        },
+        {
+            "path" : "pages/home/msg",
+            "style" : {
+                "navigationStyle" : "custom"
+            }
+        },
+        {
+            "path" : "pages/home/msginfo",
+            "style" : {
+                "navigationBarTitleText" : "消息详情",
+                "enablePullDownRefresh" : false
+            }
+        },
+        {
+            "path" : "pages/my/tiindex/tiadds",
+            "style" : {
+                "navigationBarTitleText" : "添加发票资料",
+                "enablePullDownRefresh" : false
+            }
+        },
+        {
+            "path" : "pages/my/tiindex/tiedit",
+            "style" : {
+                "navigationBarTitleText" : "修改发票资料",
+                "enablePullDownRefresh" : false
+            }
+        },
+        {
+            "path" : "pages/login_md/regirest",
+            "style" : {
+                "navigationStyle" : "custom"
+            }
+        },
+        {
+            "path" : "pages/login_md/login",
+            "style" : {
+                "navigationStyle" : "custom"
+            }
+        },
+        {
+            "path" : "pages/login_md/passwd",
+            "style" : {
+                "navigationStyle" : "custom"
+            }
+        },
+        {
+            "path" : "pages/trans/trans",
+            "style" : {
+                "navigationBarTitleText" : "",
+                "enablePullDownRefresh" : false
+            }
+        },
+        {
+            "path" : "pages/shops/shop_more",
+            "style" : {
+                "navigationStyle" : "custom"
+            }
+        },
+        {
+            "path" : "pages/my/pohead",
+            "style" : {
+                "navigationBarTitleText" : "修改个人头像",
+                "enablePullDownRefresh" : false
+            }
+        },
+        {
+            "path" : "pages/my/u-avatar-cropper",
+            "style" : {
+                "navigationBarTitleText" : "裁剪",
+                "navigationBarBackgroundColor" : "#000000"
+            }
+        },
+        {
+            "path" : "uni_modules/rt-uni-update/components/rt-uni-update/rt-uni-update",
+            "style" : {
+                "app-plus" : {
+                    "animationDuration" : 200,
+                    "animationType" : "fade-in",
+                    "background" : "transparent",
+                    "backgroundColorTop" : "transparent",
+                    "popGesture" : "none",
+                    "scrollIndicator" : false,
+                    "titleNView" : false
+                },
+                "disableScroll" : true
+            }
+        },
+        {
+            "path" : "pages/my/ysfw",
+            "style" : {
+                "navigationBarTitleText" : "隐私政策",
+                "navigationStyle" : "default"
+            }
+        },
+        {
+            "path" : "pages/ai/ai_assistant/ai_assistant",
+            "style" : {
+                "navigationStyle" : "custom"
+            }
+        },
+        {
+            "path" : "App",
+            "style" : {}
+        }
+    ],
+    "globalStyle" : {
+        "navigationBarTextStyle" : "black",
+        "navigationBarTitleText" : "uni-app",
+        "navigationBarBackgroundColor" : "#ffffff",
+        "backgroundColor" : "#F8F8F8"
+    },
+    "uniIdRouter" : {},
+    "condition" : {
+        //Mode configuration, effective only during development period.
+        "current" : 0, //Current active mode (index entry of list)
+        "list" : [
+            {
+                "name" : "", //mode name
+                "path" : "", //startup page, can not be empty
+                "query" : "" //The startup parameters are obtained in the onLoad function of the page.
+            }
+        ]
     }
-},
-
-{
-	"path" : "pages/my/ysfw",
-	"style" : 
-	{
-		"navigationBarTitleText" : "隐私政策",
-		"navigationStyle": "default"
-
-	}
-}
-],
-	"globalStyle": {
-		"navigationBarTextStyle": "black",
-		"navigationBarTitleText": "uni-app",
-		"navigationBarBackgroundColor": "#ffffff",
-		"backgroundColor": "#F8F8F8"
-	},
-	"uniIdRouter": {}
-
 }

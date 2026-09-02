@@ -1,57 +1,60 @@
 <template>
-	<view>
-		<u-navbar :is-back="false" title="">
-			<view class="d_a_sb " style="width: 750rpx;">
+	<view class="edit-container">
+		<!-- 自定义导航栏：右上角已精简，不再显示多余文字 -->
+		<u-navbar :is-back="false" title="" :background="{ background: '#ffffff' }" :border-bottom="false">
+			<view class="d_a_sb" style="width: 750rpx;">
 				<view style="width: 200rpx;padding-left: 30rpx;" @click="back">
-					<u-icon name="nav-back" color="#606266" :size="44">
-					</u-icon>
+					<u-icon name="nav-back" color="#333333" :size="40"></u-icon>
 				</view>
-				<view style="font-size: 30rpx; color: #000; font-weight: bold; text-align: center; flex-grow: 1;">修改收货地址</view>
-				<view style="width: 200rpx;padding-right: 30rpx; color: #488aff; text-align: right;" @click="apply">保存</view>
+				<view style="font-size: 32rpx; color: #1a1a1a; font-weight: 600; text-align: center; flex-grow: 1;">修改收货地址</view>
+				<view style="width: 200rpx;"></view>
 			</view>
 		</u-navbar>
 
-		<view class="uni-list">
+		<!-- 表单卡片区域 -->
+		<view class="form-card">
 			<!-- 收货姓名 -->
-			<view class="uni-item">
-				<text class="uni-label">*收货姓名</text>
-				<input v-model="name" class="uni-input" />
+			<view class="form-item">
+				<text class="uni-label">收货人</text>
+				<input v-model="name" class="uni-input" placeholder="请填写收货人姓名" placeholder-style="color: #c0c4cc;" />
 			</view>
 
 			<!-- 手机号码 -->
-			<view class="uni-item">
-				<text class="uni-label">*手机号码</text>
-				<input v-model="phone" type="number" class="uni-input" />
+			<view class="form-item">
+				<text class="uni-label">手机号码</text>
+				<input v-model="phone" type="number" maxlength="11" class="uni-input" placeholder="请填写手机号码" placeholder-style="color: #c0c4cc;" />
 			</view>
 
-			<!-- 选择地区 -->
-			<view class="uni-item">
-				<text class="uni-label">*选择地区</text>
-				<!-- <view class="" @click="show=true">
-					<text v-if="prov &&  prov!=0">{{prov}}-{{city}}-{{label}}</text>
-					<text v-else>请选择</text>
-				</view> -->
-				
-				<uni-data-picker placeholder="选择地区" popup-title="请选择所在地区" :localdata="dataTree" v-model="label"
-					@change="onchange" @nodeclick="onnodeclick" @popupopened="onpopupopened"
-					@popupclosed="onpopupclosed">
-				</uni-data-picker>
+			<!-- 选择省市区 -->
+			<view class="form-item" @click="showPicker = true">
+				<text class="uni-label">所在地区</text>
+				<view class="picker-display">
+					<text v-if="prov && prov != 0" class="selected-text">{{prov}} {{city}} {{label}}</text>
+					<text v-else class="placeholder-text">省、市、区县</text>
+					<u-icon name="arrow-right" color="#c0c4cc" size="28"></u-icon>
+				</view>
 			</view>
 
-			<!-- 街道详情 -->
-			<view class="uni-item">
-				<text class="uni-label">*街道详情</text>
-				<input v-model="street" class="uni-input" />
+			<!-- 详细地址（街道、镇、村、门牌号手动输入） -->
+			<view class="form-item textarea-item">
+				<text class="uni-label">详细地址</text>
+				<textarea v-model="street" class="uni-textarea" placeholder="请输入街道、乡镇、村、门牌号等信息" placeholder-style="color: #c0c4cc;" auto-height />
 			</view>
 
 			<!-- 设为默认地址 -->
-			<view class="uni-item">
-				<text class="uni-label">设为默认地址</text>
-				<u-switch v-model="isDefault"></u-switch>
+			<view class="form-item switch-item">
+				<text class="uni-label">设为默认收货地址</text>
+				<u-switch v-model="isDefault" active-color="#2979ff"></u-switch>
 			</view>
 		</view>
 
-		<u-picker mode="region" @confirm="confirm" v-model="show" :params="params"></u-picker>
+		<!-- 底部大按钮 -->
+		<view class="footer-btn-box">
+			<button class="save-btn" @click="apply">保存并使用</button>
+		</view>
+
+		<!-- 省市区选择弹窗 -->
+		<u-picker mode="region" @confirm="confirmRegion" v-model="showPicker" :params="params"></u-picker>
 	</view>
 </template>
 
@@ -64,28 +67,17 @@
 					city: true,
 					area: true
 				},
-				dataTree:uni.getStorageSync("address") || [],
-				show: false,
-				regionRange: [], // 地区选择器的范围数组
-				selectedRegion: ['', '', ''], // 已选择的地区
-				isDefault: false, // 是否设为默认地址
+				showPicker: false,
+				isDefault: false,
 
 				uid: '',
 				name: "",
 				phone: "",
-				//////
-				prov: 0,
-				prov_list: '',
-				city: 0,
-				city_list: '',
-				label: 0,
-				label_list: '',
-				////
+				prov: "",
+				city: "",
+				label: "",
 				street: "",
-				def: 0,
 				addr_id: '',
-				classes: '',
-
 			}
 		},
 		onLoad(option) {
@@ -101,44 +93,27 @@
 							uni.reLaunch({
 								url: '/pages/login_md/login_md'
 							})
-						} else if (res.cancel) {
-							console.log('用户点击取消');
 						}
 					}
 				});
 			} else {
-				console.log(userInfo);
 				this.uid = userInfo.id
 				this.doIninit()
-				this.regionAll()
 			}
 		},
 		methods: {
-			onpopupopened(e) {
-				console.log('popupopened');
-			},
-			onpopupclosed(e) {
-				console.log('popupclosed');
-			},
-			onnodeclick(e) {
-				console.log(e);
-			},
-			onchange(e) {
-				console.log('onchange:', e);
-				
-				this.prov = e.detail.value[0].value
-				this.city =e.detail.value[1].value
-				this.label = e.detail.value[2].value
-				
-			},
-			regionAll(){
-				this.$api.regionAll().then(res=>{
-					this.dataTree=res.data
-					uni.setStorageSync("address",res.data)
-				})
+			confirmRegion(e) {
+				this.prov = e.province.label;
+				this.city = e.city.label;
+				this.label = e.area.label;
 			},
 			apply() {
 				let that = this;
+				if (!that.name) { uni.showToast({ title: '请填写收货人', icon: 'none' }); return; }
+				if (!that.phone) { uni.showToast({ title: '请填写手机号', icon: 'none' }); return; }
+				if (!that.prov) { uni.showToast({ title: '请选择所在地区', icon: 'none' }); return; }
+				if (!that.street) { uni.showToast({ title: '请填写详细地址', icon: 'none' }); return; }
+
 				let param = {
 					ids: that.addr_id,
 					uid: that.uid,
@@ -150,9 +125,8 @@
 					street: that.street,
 					def: that.isDefault ? 1 : 0,
 				};
-				uni.showLoading({
-					title: "修改中..."
-				})
+				
+				uni.showLoading({ title: "保存中..." })
 				that.$api.uaddr_edits(param).then(ret => {
 					uni.hideLoading()
 					uni.navigateBack()
@@ -164,61 +138,116 @@
 			back() {
 				uni.navigateBack()
 			},
-			confirm(e) {
-				this.prov = e.province.label
-				this.city = e.city.label
-				this.label = e.area.label
-				console.log(e);
-			},
 			doIninit() {
 				let that = this;
-				let params = {
-					addrid: that.addr_id
-				};
+				let params = { addrid: that.addr_id };
 				that.$api.uaddr_info(params).then(ret => {
-					that.prov_list = ret.data.prov;
-					that.info = ret.data.info;
-					//
-					that.name = ret.data.info.name;
-					that.phone = ret.data.info.phone;
-					that.prov = ret.data.info.prov;
-					that.city = ret.data.info.city;
-					that.label = ret.data.info.label;
-					that.street = ret.data.info.street;
-					that.isDefault = ret.data.info.def > 0 ? true : false;
-				}).catch(err => {
-
-				});
+					if (ret.data && ret.data.info) {
+						let info = ret.data.info;
+						that.name = info.name;
+						that.phone = info.phone;
+						that.prov = info.prov;
+						that.city = info.city;
+						that.label = info.label;
+						that.street = info.street;
+						that.isDefault = info.def > 0 ? true : false;
+					}
+				}).catch(err => {});
 			}
 		}
 	}
 </script>
 
 <style scoped lang="scss">
-	.uni-list {
-		margin: 0;
-		padding: 0;
+	.edit-container {
+		background-color: #f4f6f9;
+		min-height: 100vh;
+		padding: 24rpx;
 	}
 
-	.uni-item {
+	.form-card {
+		background: #ffffff;
+		border-radius: 20rpx;
+		padding: 0 32rpx;
+		box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.03);
+	}
+
+	.form-item {
 		display: flex;
 		align-items: center;
-		padding: 10px;
-		border-bottom: 1px solid #eee;
+		padding: 32rpx 0;
+		border-bottom: 1px solid #f2f3f5;
+
+		&:last-child {
+			border-bottom: none;
+		}
+
+		.uni-label {
+			width: 180rpx;
+			font-size: 28rpx;
+			color: #333333;
+			font-weight: 500;
+		}
+
+		.uni-input {
+			flex: 1;
+			font-size: 28rpx;
+			color: #1a1a1a;
+		}
+		
+		.uni-textarea {
+			flex: 1;
+			font-size: 28rpx;
+			color: #1a1a1a;
+			min-height: 80rpx;
+			padding-top: 6rpx;
+		}
 	}
 
-	.uni-label {
+	.picker-display {
 		flex: 1;
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+
+		.selected-text {
+			font-size: 28rpx;
+			color: #1a1a1a;
+		}
+
+		.placeholder-text {
+			font-size: 28rpx;
+			color: #c0c4cc;
+		}
 	}
 
-	.uni-input,
-	.uni-select {
-		flex: 2;
-		padding: 5px;
-		border-radius: 5px;
+	.switch-item {
+		justify-content: space-between;
+		
+		.uni-label {
+			width: auto;
+		}
 	}
 
-	.uni-switch {
-		margin-left: auto;
+	.footer-btn-box {
+		margin-top: 60rpx;
+		padding: 0 20rpx;
+
+		.save-btn {
+			background: #2979ff;
+			color: #ffffff;
+			font-size: 32rpx;
+			font-weight: 600;
+			height: 88rpx;
+			line-height: 88rpx;
+			border-radius: 44rpx;
+			box-shadow: 0 8rpx 20rpx rgba(41, 121, 255, 0.3);
+			border: none;
+			
+			&:active {
+				opacity: 0.9;
+			}
+		}
 	}
 </style>
+```[cite: 4]

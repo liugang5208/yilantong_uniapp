@@ -1,33 +1,45 @@
 <template>
-	<view>
-		<view class="banner">
-			<image mode="widthFix" src="/static/imgs/login_banner.png" />
+	<view class="login-container">
+		<!-- 顶部纯净 Banner 区域 -->
+		<view class="banner-box">
+			<image class="banner-img" mode="widthFix" src="/static/imgs/login_banner.png" />
 		</view>
 
-		<view class="form">
-			<view class="form_new_reg">
-				<span @click="doCode()" class="left">
-					用密码登录
-				</span>
-				<span @click="regirest()">新用户注册></span>
-			</view>
-			<view>
-				<u-field v-model="phone" label="手机号" placeholder="请输入注册手机号码">
-				</u-field>
-				<u-field v-model="code" label="验证码" placeholder="请输入验证码">
-				</u-field>
+		<!-- 表单核心区域 -->
+		<view class="form-box">
+			<!-- 顶部快捷切换栏：左右两侧完美对称的引导标识 -->
+			<view class="form-top-action">
+				<text class="switch-btn" @click="doCode()">&lt; 密码登录</text>
+				<text class="reg-btn" @click="regirest()">新用户注册 &gt;</text>
 			</view>
 
-			<div class="codes" style="font-size: 1.4rem" @click="getCodes()">{{code_tip}}</div>
+			<!-- 输入框卡片群组 -->
+			<view class="input-card-group">
+				<view class="input-row">
+					<u-field v-model="phone" label="手机号" placeholder="请输入注册手机号码" :border-bottom="false"></u-field>
+				</view>
+				
+				<view class="input-row code-row">
+					<u-field v-model="code" label="验证码" placeholder="请输入验证码" :border-bottom="false"></u-field>
+					<view class="code-btn-box" @click="getCodes()">
+						<text class="code-text">{{code_tip}}</text>
+					</view>
+				</view>
+			</view>
 			
-			<view class="form_button" @click="doLogin()">登录易缆通商城</view>
-			<view class="form_tips">
-				<u-checkbox v-model="regtool" active-color="red"></u-checkbox>
-				<span @click="viewTools()">登录即代表您同意并认可<i>《易缆通服务条款》</i></span>
+			<!-- 登录主按钮 -->
+			<div class="submit-btn" @click="doLogin()">立即登录</div>
+			
+			<!-- 底部协议勾选 -->
+			<view class="agreement-box">
+				<u-checkbox v-model="regtool" active-color="#c20f22" size="32"></u-checkbox>
+				<text class="agreement-text">我已阅读并同意 <text class="link" @click.stop="viewTools()">《服务与隐私政策》</text></text>
 			</view>
 		</view>
-		<view class="footer d_a_j">
-			<image mode="widthFix" src="/static/imgs/login_footer.png" />
+
+		<!-- 底部轻量化版权信息 -->
+		<view class="footer-box">
+			<text class="footer-txt">© 2026 四川亚建线缆有限公司 版权所有</text>
 		</view>
 	</view>
 </template>
@@ -37,7 +49,6 @@
 		data() {
 			return {
 				phone: '',
-				passwd: '',
 				code_tim: 0,
 				code_tip: "获取验证码",
 				code: "",
@@ -45,48 +56,6 @@
 			}
 		},
 		methods: {
-			getLocation(userInfo) {
-				uni.getLocation({
-					type: 'wgs84',
-					success:  (res)=> {
-						console.log('当前位置的经度：' + res.longitude);
-						console.log('当前位置的纬度：' + res.latitude);
-						const latitude = res.latitude;
-						const longitude = res.longitude;
-						const amapKey = 'fa3fef17cc0470481e01b9b0eea509a1';
-						// 构建请求URL
-						const url = `https://restapi.amap.com/v3/geocode/regeo?key=${amapKey}&location=${longitude},${latitude}`;
-						// 使用uni.request进行请求
-						uni.request({
-						    url: url, // 请求的地址
-						    method: 'GET', // 请求方法
-						    success: (res) => {
-						        if (res.statusCode === 200 && res.data && res.data.regeocode) {
-									console.log(res.data)
-						            const address = res.data.regeocode.addressComponent.district;
-									this.label=address
-									this.$api.regionAdd({
-										uid:userInfo.id,
-										prov:res.data.regeocode.addressComponent.province,
-										city:res.data.regeocode.addressComponent.city,
-										label:res.data.regeocode.addressComponent.district
-									})
-						            console.log('解析的地址是:', address);
-									
-									
-						            // 这里可以进行后续操作，例如更新UI显示解析的地址等
-						        } else {
-						            console.error('解析失败:', res.data);
-						        }
-						    },
-						    fail: (err) => {
-						        console.error('请求失败:', err);
-						    }
-						});
-					}
-				});
-				
-			},
 			doCode() {
 				uni.navigateTo({
 					url: '/pages/login_md/login_md'
@@ -108,7 +77,7 @@
 				if (!that.regtool) {
 					uni.showToast({
 						icon: 'none',
-						title: "请阅读并同意协议"
+						title: "请先阅读并勾选同意服务协议"
 					})
 					return false;
 				}
@@ -122,43 +91,24 @@
 				if (!that.code) {
 					uni.showToast({
 						icon: 'none',
-						title: "请输入密码"
+						title: "请输入验证码"
 					})
 					return false;
 				}
 				
-				uni.showModal({
-					title: '提示',
-					content: '登录即代表您同意并认可《易缆通服务条款》',
-					
-					success: (res) => {
-						if (res.confirm) {
-							uni.showLoading({
-								mask: true,
-								title: "登录中..."
-							})
-							this.$api.logCode({
-								phone: that.phone,
-								code: that.code
-							}).then(ret => {
-								// this.getLocation(ret.data)
-								that.doJump(ret.data);
-							}).finally(f => {
-								uni.hideLoading()
-							})
-						} else if (res.cancel) {
-							console.log('用户点击取消');
-						}
-					}
-				});
+				uni.showLoading({
+					mask: true,
+					title: "登录中..."
+				})
 				
-				
-				////////////////////////
-
-
-
-				/***************/
-
+				this.$api.logCode({
+					phone: that.phone,
+					code: that.code
+				}).then(ret => {
+					that.doJump(ret.data);
+				}).finally(f => {
+					uni.hideLoading()
+				})
 			},
 
 			/**
@@ -199,7 +149,7 @@
 						clearInterval(timer);
 						return;
 					}
-					that.code_tip = "" + that.code_tim;
+					that.code_tip = that.code_tim + "s";
 				}, 1000);
 			},
 
@@ -210,135 +160,141 @@
 					url: '/pages/index/index'
 				})
 			}
-
-
-
-
 		}
 	}
 </script>
 
 <style scoped lang="scss">
-	.codes {
-		color: #c20f22;
-		margin-right: 0rem;
-		margin-top: -60rpx;
-		position: absolute;
-		right: 30rpx;
-		text-align: right;
-		width: 200rpx;
-		z-index: 1000;
-	}
-
-	.banner {
-		width: 100%;
-	}
-
-	.banner image {
-		vertical-align: middle;
-		width: 100%;
-	}
-
-	.footer {
-		width: 100%;
-	}
-
-	.form {
-		padding: 36rpx 24rpx 0rem;
-	}
-
-	.list-ios {
-		margin: 0rem;
-	}
-
-	.list-ios>.item-block {
-		font-size: 32rpx;
-		padding: 0rem;
-	}
-
-	.list-ios>.item-block:first-child {
-		border: 0rem;
-	}
-
-	.item-input {
-		text-align: justify;
-		width: 120rpx;
-	}
-
-	.form_new_reg {
-		color: #c20f22;
-		text-align: right;
-		padding: 0rem 0rem 20rpx;
-	}
-
-	.form_new_reg span.left {
-		color: #4a90e2;
-		float: left;
-	}
-
-	.form_new_reg::after {
-		clear: both;
-		display: table;
-		content: " ";
-	}
-
-	.form_action {
+	.login-container {
+		min-height: 100vh;
+		background-color: #f7f9fc;
 		display: flex;
+		flex-direction: column;
+		box-sizing: border-box;
 	}
 
-	.form_action-item {
-		color: #999999;
-		font-size: 32rpx;
+	/* 顶部纯净 Banner 区 */
+	.banner-box {
+		width: 100%;
+		background-color: #ffffff;
+		overflow: hidden;
+		
+		.banner-img {
+			width: 100%;
+			display: block;
+		}
+	}
+
+	/* 表单容器卡片化与舒展留白 */
+	.form-box {
 		flex: 1;
-		height: 100rpx;
-		line-height: 100rpx;
+		padding: 32rpx 32rpx 60rpx;
+		display: flex;
+		flex-direction: column;
+		
+		.form-top-action {
+			display: flex;
+			justify-content: space-between;
+			align-items: center;
+			margin-bottom: 24rpx;
+			padding: 0 4rpx;
+			
+			.switch-btn {
+				font-size: 28rpx;
+				color: #2563eb;
+				font-weight: 500;
+			}
+			
+			.reg-btn {
+				font-size: 28rpx;
+				color: #64748b;
+			}
+		}
+		
+		/* 输入框块级包裹 */
+		.input-card-group {
+			background: #ffffff;
+			border-radius: 24rpx;
+			padding: 12rpx 24rpx;
+			box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.02);
+			border: 1rpx solid #edf2f7;
+			margin-bottom: 36rpx;
+			
+			.input-row {
+				position: relative;
+				border-bottom: 1rpx solid #f1f5f9;
+				
+				&:last-child {
+					border-bottom: none;
+				}
+			}
+			
+			.code-row {
+				display: flex;
+				align-items: center;
+				justify-content: space-between;
+				
+				/* 完美的 Flex 插槽，替代原先极易错位的绝对定位 */
+				.code-btn-box {
+					padding: 12rpx 24rpx;
+					background-color: #f8fafc;
+					border: 1rpx solid #e2e8f0;
+					border-radius: 12rpx;
+					flex-shrink: 0;
+					margin-left: 20rpx;
+					
+					.code-text {
+						font-size: 26rpx;
+						color: #2563eb;
+						font-weight: 600;
+					}
+				}
+			}
+		}
+		
+		/* 高端琉璃渐变主按钮 */
+		.submit-btn {
+			background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+			border-radius: 16rpx;
+			color: white;
+			font-size: 32rpx;
+			font-weight: 600;
+			height: 92rpx;
+			line-height: 92rpx;
+			text-align: center;
+			box-shadow: 0 10rpx 24rpx rgba(37, 99, 235, 0.2);
+			margin-bottom: 36rpx;
+			letter-spacing: 2rpx;
+		}
+		
+		/* 协议勾选行 */
+		.agreement-box {
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			font-size: 26rpx;
+			color: #64748b;
+			
+			.agreement-text {
+				margin-left: 12rpx;
+				
+				.link {
+					color: #2563eb;
+					font-weight: 500;
+				}
+			}
+		}
 	}
 
-	.form_action-item:last-child {
-		text-align: right;
-	}
-
-	.form_button {
-		background: #c20f22;
-		border-radius: 4rpx;
-		color: white;
-		font-size: 36rpx;
-		height: 88rpx;
-		line-height: 88rpx;
-		margin-top: 24rpx;
+	/* 底部微标 */
+	.footer-box {
 		text-align: center;
-	}
-
-	.form_reg {
-		color: #4a90e2;
-		font-size: 32rpx;
-		margin-top: 32rpx;
-		text-align: center;
-	}
-
-	.form_tips {
-		font-size: 26rpx;
-		margin-bottom: 200rpx;
-		padding: 32rpx 0rem 0rem;
-		text-align: center;
-	}
-
-	.form_tips image {
-		margin-top: -4rpx;
-		margin-right: 16rpx;
-		vertical-align: middle;
-		width: 38rpx;
-	}
-
-	.form_tips i.fa {
-		color: #c20f22;
-		margin: -2px 10rpx 0rem 0rem;
-		vertical-align: middle;
-		font-size: 40rpx;
-	}
-
-	.form_tips span i {
-		color: #c20f22;
-		font-style: normal;
+		padding: 20rpx 0 40rpx;
+		
+		.footer-txt {
+			font-size: 24rpx;
+			color: #94a3b8;
+			letter-spacing: 1rpx;
+		}
 	}
 </style>

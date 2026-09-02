@@ -1,37 +1,49 @@
 <template>
-	<view>
+	<view class="login-container">
+		<!-- 顶部导航栏保持不变 -->
 		<u-navbar :is-back="false" title="">
 			<view class="d_a_sb " style="width: 750rpx;">
 				<view style="width: 200rpx;padding-left: 30rpx;" @click="back">
-					<u-icon name="nav-back" color="#606266" :size="44">
-					</u-icon>
+					<u-icon name="nav-back" color="#606266" :size="44"></u-icon>
 				</view>
 				<view style="font-size: 30rpx; color: #000; font-weight: bold; text-align: center; flex-grow: 1;">找回密码</view>
-				<view style="width: 200rpx;padding-right: 30rpx; color: #488aff; text-align: right;" @click="doForget">保存</view>
+				<view style="width: 200rpx;padding-right: 30rpx; color: #488aff; text-align: right; opacity: 0;" @click="doForget">保存</view>
 			</view>
 		</u-navbar>
-		<view class="uni-list">
-			<view class="uni-item">
-				<text class="uni-label">手机号码</text>
-				<input v-model="phone" placeholder="请输入注册手机号码" type="number" class="uni-input" />
+
+		<!-- 整体下移、居中且带精致卡片风格的内容区域 -->
+		<view class="form-wrapper">
+			<!-- 标题引导 -->
+			<view class="page-header-title">
+				<text class="main-title">重置密码</text>
+				<text class="sub-title">请通过手机验证码安全重置您的登录密码</text>
 			</view>
 
-			<view class="uni-item">
-				<text class="uni-label">验证码</text>
-				<input v-model="code " placeholder="短信验证码" class="uni-input" />
+			<!-- 输入框卡片群组 -->
+			<view class="input-card-group">
+				<view class="input-row">
+					<u-field v-model="phone" label="手机号码" type="number" placeholder="请输入注册手机号码" :border-bottom="false"></u-field>
+				</view>
+
+				<view class="input-row code-row">
+					<u-field v-model="code" label="验证码" placeholder="短信验证码" :border-bottom="false"></u-field>
+					<view class="code-btn-box" @click.stop="getCodes()">
+						<text class="code-text">{{code_tip}}</text>
+					</view>
+				</view>
+
+				<view class="input-row">
+					<u-field v-model="passwd" type="password" label="新密码" placeholder="请输入新密码" :border-bottom="false"></u-field>
+				</view>
+
+				<view class="input-row">
+					<u-field v-model="vipass" type="password" label="确认密码" placeholder="请再次输入新密码" :border-bottom="false"></u-field>
+				</view>
 			</view>
 
-			<view class="uni-item">
-				<text class="uni-label">新密码</text>
-				<input v-model="passwd" type="password" placeholder="请输入新密码" class="uni-input" />
-			</view>
-
-			<view class="uni-item">
-				<text class="uni-label">确认密码</text>
-				<input v-model="vipass" type="password" placeholder="请再次输入新密码" class="uni-input" />
-			</view>
+			<!-- 琉璃蓝渐变提交主按钮 -->
+			<div class="submit-btn" @click="doForget()">确认修改</div>
 		</view>
-		<div class="codes" @click="getCodes()">{{code_tip}}</div>
 	</view>
 </template>
 
@@ -52,7 +64,9 @@
 				uni.navigateBack()
 			},
 
-
+			/**
+			 * 接口逻辑保持原样
+			 */
 			doForget() {
 				let that = this;
 				var param = {
@@ -99,16 +113,20 @@
 				uni.showLoading({
 					title: "处理中..."
 				})
-				/***************/
+				
 				that.$api.forget(param).then(ret => {
 					uni.hideLoading()
-					uni.navigateBack()
+					uni.showToast({
+						title: "修改成功",
+						icon: "success"
+					})
+					setTimeout(() => {
+						uni.navigateBack()
+					}, 1500)
 				}).catch(err => {
 					uni.hideLoading()
-
 				});
 			},
-
 
 			getCodes() {
 				var that = this;
@@ -135,6 +153,7 @@
 					uni.hideLoading()
 				});
 			},
+			
 			getCodesVal() {
 				var that = this;
 				that.code_tim = 120;
@@ -145,7 +164,7 @@
 						clearInterval(timer);
 						return;
 					}
-					that.code_tip = "" + that.code_tim;
+					that.code_tip = that.code_tim + "s";
 				}, 1000);
 			},
 		}
@@ -153,107 +172,96 @@
 </script>
 
 <style scoped lang="scss">
-	.uni-list {
-		margin: 0;
-		padding: 0;
-	}
-
-	.uni-item {
+	.login-container {
+		min-height: 100vh;
+		background-color: #f7f9fc;
 		display: flex;
-		align-items: center;
-		padding: 10px;
-		border-bottom: 1px solid #eee;
+		flex-direction: column;
+		box-sizing: border-box;
 	}
 
-	.uni-label {
+	/* 整体往下移并集中在视觉中心 */
+	.form-wrapper {
 		flex: 1;
-	}
-
-	.uni-input,
-	.uni-select {
-		flex: 2;
-		padding: 5px;
-		border-radius: 5px;
-	}
-
-	.uni-switch {
-		margin-left: auto;
-	}
-
-	.banner {
+		padding: 40rpx 32rpx;
+		display: flex;
+		flex-direction: column;
+		justify-content: center; /* 垂直居中偏移，告别顶部贴顶难看的问题 */
+		max-width: 680rpx;
 		width: 100%;
-	}
+		margin: 0 auto;
+		box-sizing: border-box;
 
-	.banner image {
-		vertical-align: middle;
-		width: 100%;
-	}
+		.page-header-title {
+			margin-bottom: 40rpx;
+			padding-left: 10rpx;
 
-	.form {
-		padding: 36rpx 24rpx;
-	}
+			.main-title {
+				font-size: 44rpx;
+				font-weight: 700;
+				color: #1e293b;
+				display: block;
+				margin-bottom: 12rpx;
+			}
 
-	.codes {
-		color: #c20f22;
-		margin-right: 0rem;
-		margin-top: -240rpx;
-		position: absolute;
-		right: 30rpx;
-		text-align: right;
-		width: 200rpx;
-	}
+			.sub-title {
+				font-size: 26rpx;
+				color: #64748b;
+			}
+		}
 
-	.list-ios {
-		margin: 0rem;
-	}
+		/* 卡片化区块包裹 */
+		.input-card-group {
+			background: #ffffff;
+			border-radius: 24rpx;
+			padding: 12rpx 24rpx;
+			box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.02);
+			border: 1rpx solid #edf2f7;
+			margin-bottom: 48rpx;
 
-	.list-ios>.item-block {
-		font-size: 32rpx;
-		padding: 0rem;
-		position: relative;
-	}
+			.input-row {
+				position: relative;
+				border-bottom: 1rpx solid #f1f5f9;
 
-	.list-ios>.item-block:first-child {
-		border: 0rem;
-	}
+				&:last-child {
+					border-bottom: none;
+				}
+			}
 
+			.code-row {
+				display: flex;
+				align-items: center;
+				justify-content: space-between;
 
-	.input-wrapper>.select-ios:first-child {
-		padding-left: 0rem;
-	}
+				.code-btn-box {
+					padding: 12rpx 24rpx;
+					background-color: #f8fafc;
+					border: 1rpx solid #e2e8f0;
+					border-radius: 12rpx;
+					flex-shrink: 0;
+					margin-left: 20rpx;
 
-	.form_tips {
-		font-size: 26rpx;
-		padding: 72rpx 30rpx 40rpx 30rpx;
-	}
+					.code-text {
+						font-size: 26rpx;
+						color: #2563eb;
+						font-weight: 600;
+					}
+				}
+			}
+		}
 
-	.form_tips image {
-		margin-top: -4rpx;
-		margin-right: 16rpx;
-		vertical-align: middle;
-		width: 38rpx;
-	}
-
-	.form_tips i.fa {
-		color: #c20f22;
-		margin: -4rpx 10rpx 0rem 0rem;
-		vertical-align: middle;
-		font-size: 40rpx;
-	}
-
-	.form_tips span i {
-		color: #4a90e2;
-		font-style: normal;
-	}
-
-	.form_button {
-		background: #c20f22;
-		border-radius: 4rpx;
-		color: white;
-		font-size: 36rpx;
-		height: 88rpx;
-		line-height: 88rpx;
-		margin-top: 24rpx;
-		text-align: center;
+		/* 高端琉璃蓝渐变主按钮 */
+		.submit-btn {
+			background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+			border-radius: 16rpx;
+			color: white;
+			font-size: 32rpx;
+			font-weight: 600;
+			height: 92rpx;
+			line-height: 92rpx;
+			text-align: center;
+			box-shadow: 0 10rpx 24rpx rgba(37, 99, 235, 0.2);
+			letter-spacing: 2rpx;
+		}
 	}
 </style>

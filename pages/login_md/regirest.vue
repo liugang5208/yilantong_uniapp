@@ -1,56 +1,69 @@
 <template>
-	<view>
-		<div class="banner">
-			<image mode="widthFix" src="/static/imgs/login_banner.png" />
-		</div>
-
-		<view class="uni-list">
-
-			<!-- 选择地区 -->
-			<view class="uni-item">
-				<text class="uni-label">选择地区</text>
-				<view class="" @click="show=true">
-					<text v-if="prov">{{prov}}-{{city}}-{{label}}</text>
-					<text v-else>请选择</text>
-				</view>
-			</view>
-
-			<view class="uni-item">
-				<text class="uni-label">用户姓名</text>
-				<input v-model="nickname" placeholder="请输入您的名称" class="uni-input" />
-			</view>
-
-			<view class="uni-item">
-				<text class="uni-label">手机号码</text>
-				<input v-model="phone" placeholder="请输入注册手机号码" type="number" class="uni-input" />
-			</view>
-
-			<view class="uni-item" style="position: relative;">
-				<text class="uni-label">验证码</text>
-				<input v-model="code" placeholder="请输入验证码" class="uni-input" />
-				<div class="codes" @click="getCodes()">{{code_tip}}</div>
-			</view>
-
-			<view class="uni-item">
-				<text class="uni-label">密 码</text>
-				<input v-model="passwd" type="safe-password" placeholder="请输入登录密码" class="uni-input" />
-			</view>
-
-			<view class="uni-item">
-				<text class="uni-label">确认密码</text>
-				<input v-model="vipass" type="safe-password" placeholder="请再次输入新密码" class="uni-input" />
-			</view>
-
+	<view class="login-container">
+		<!-- 顶部纯净 Banner 区域 -->
+		<view class="banner-box">
+			<image class="banner-img" mode="widthFix" src="/static/imgs/login_banner.png" />
 		</view>
 
+		<!-- 表单核心区域 -->
+		<view class="form-box">
+			<!-- 顶部快捷返回栏：只保留左侧返回登录，右侧留空或不放重复按钮 -->
+			<view class="form-top-action">
+				<text class="switch-btn" @click="toLogin()">&lt; 返回登录</text>
+			</view>
 
+			<!-- 输入框卡片群组 -->
+			<view class="input-card-group">
+				<!-- 地区选择行（扩大点击热区，彻底解决部分手机点不动、无法选择的问题） -->
+				<view class="input-row region-row" @click="show = true">
+					<text class="row-label">选择地区</text>
+					<view class="row-val-box">
+						<text class="selected-text" v-if="prov && prov !== 0">{{prov}} - {{city}} - {{label}}</text>
+						<text class="placeholder-text" v-else>请选择省市区</text>
+					</view>
+					<text class="arrow-icon">&gt;</text>
+				</view>
 
-		<div class="form_tips">
-			<u-checkbox v-model="regtool" active-color="red"></u-checkbox>
-			<span @click="viewTools()">注册账号即代表您同意并认可<i>《易缆通APP使用条款》</i></span>
-		</div>
-		<div class="form_button" @click="doRegist()">立即注册</div>
+				<view class="input-row">
+					<u-field v-model="nickname" label="用户姓名" placeholder="请输入您的名称" :border-bottom="false"></u-field>
+				</view>
+				
+				<view class="input-row">
+					<u-field v-model="phone" label="手机号码" type="number" placeholder="请输入注册手机号码" :border-bottom="false"></u-field>
+				</view>
+				
+				<view class="input-row code-row">
+					<u-field v-model="code" label="验证码" placeholder="请输入验证码" :border-bottom="false"></u-field>
+					<view class="code-btn-box" @click.stop="getCodes()">
+						<text class="code-text">{{code_tip}}</text>
+					</view>
+				</view>
+				
+				<view class="input-row">
+					<u-field v-model="passwd" type="safe-password" label="密 码" placeholder="请输入登录密码" :border-bottom="false"></u-field>
+				</view>
+				
+				<view class="input-row">
+					<u-field v-model="vipass" type="safe-password" label="确认密码" placeholder="请再次输入新密码" :border-bottom="false"></u-field>
+				</view>
+			</view>
+			
+			<!-- 底部协议勾选（强制单行展示，不换行） -->
+			<view class="agreement-box">
+				<u-checkbox v-model="regtool" active-color="#2563eb" size="32"></u-checkbox>
+				<text class="agreement-text">注册账号即代表您同意并认可<text class="link" @click.stop="viewTools()">《易缆通APP使用条款》</text></text>
+			</view>
 
+			<!-- 注册主按钮 -->
+			<div class="submit-btn" @click="doRegist()">立即注册</div>
+		</view>
+
+		<!-- 底部轻量化版权信息 -->
+		<view class="footer-box">
+			<text class="footer-txt">© 2026 四川亚建线缆有限公司 版权所有</text>
+		</view>
+
+		<!-- 地区选择器组件 -->
 		<u-picker mode="region" @confirm="confirm" v-model="show" :params="params"></u-picker>
 	</view>
 </template>
@@ -67,15 +80,11 @@
 				city_list: '',
 				label: 0,
 				label_list: '',
-				////
 				nickname: "",
 				phone: "",
 				code: "",
 				passwd: "",
 				vipass: "",
-				////
-
-				//
 				code_tim: 0,
 				code_tip: "获取验证码",
 				params: {
@@ -92,6 +101,16 @@
 					url: '/pages/login_md/regtool/regtool'
 				})
 			},
+			toLogin() {
+				uni.navigateBack({
+					delta: 1,
+					fail: () => {
+						uni.redirectTo({
+							url: '/pages/login_md/login'
+						})
+					}
+				});
+			},
 			confirm(e) {
 				this.prov = e.province.label
 				this.city = e.city.label
@@ -99,7 +118,7 @@
 				console.log(e);
 			},
 			/**
-			 * 获取验证码
+			 * 获取验证码（接口保持原样）
 			 */
 			getCodes() {
 				var that = this;
@@ -178,107 +197,168 @@
 </script>
 
 <style scoped lang="scss">
-	.uni-list {
-		margin: 0;
-		padding: 0;
-	}
-
-	.uni-item {
+	.login-container {
+		min-height: 100vh;
+		background-color: #f7f9fc;
 		display: flex;
-		align-items: center;
-		padding: 10px;
-		border-bottom: 1px solid #eee;
+		flex-direction: column;
+		box-sizing: border-box;
 	}
 
-	.uni-label {
+	/* 顶部纯净 Banner 区 */
+	.banner-box {
+		width: 100%;
+		background-color: #ffffff;
+		overflow: hidden;
+		
+		.banner-img {
+			width: 100%;
+			display: block;
+		}
+	}
+
+	/* 表单核心区域 */
+	.form-box {
 		flex: 1;
+		padding: 32rpx 32rpx 60rpx;
+		display: flex;
+		flex-direction: column;
+		
+		.form-top-action {
+			display: flex;
+			justify-content: flex-start;
+			align-items: center;
+			margin-bottom: 24rpx;
+			padding: 0 4rpx;
+			
+			.switch-btn {
+				font-size: 28rpx;
+				color: #2563eb;
+				font-weight: 500;
+			}
+		}
+		
+		/* 输入框卡片群组 */
+		.input-card-group {
+			background: #ffffff;
+			border-radius: 24rpx;
+			padding: 12rpx 24rpx;
+			box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.02);
+			border: 1rpx solid #edf2f7;
+			margin-bottom: 24rpx;
+			
+			.input-row {
+				position: relative;
+				border-bottom: 1rpx solid #f1f5f9;
+				
+				&:last-child {
+					border-bottom: none;
+				}
+			}
+
+			/* 地区选择行 */
+			.region-row {
+				display: flex;
+				align-items: center;
+				padding: 24rpx 12rpx;
+				font-size: 28rpx;
+				color: #333;
+				
+				.row-label {
+					width: 140rpx;
+					color: #303133;
+					font-weight: 500;
+				}
+				
+				.row-val-box {
+					flex: 1;
+					text-align: right;
+					padding-right: 16rpx;
+					
+					.selected-text {
+						color: #303133;
+					}
+					
+					.placeholder-text {
+						color: #c0c4cc;
+					}
+				}
+				
+				.arrow-icon {
+					color: #c0c4cc;
+					font-size: 28rpx;
+				}
+			}
+			
+			.code-row {
+				display: flex;
+				align-items: center;
+				justify-content: space-between;
+				
+				.code-btn-box {
+					padding: 12rpx 24rpx;
+					background-color: #f8fafc;
+					border: 1rpx solid #e2e8f0;
+					border-radius: 12rpx;
+					flex-shrink: 0;
+					margin-left: 20rpx;
+					
+					.code-text {
+						font-size: 26rpx;
+						color: #c20f22;
+						font-weight: 600;
+					}
+				}
+			}
+		}
+		
+		/* 协议勾选区：强制不换行，单行完整展示 */
+		.agreement-box {
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			font-size: 24rpx;
+			color: #64748b;
+			margin-bottom: 36rpx;
+			white-space: nowrap;
+			overflow: hidden;
+			text-overflow: ellipsis;
+			
+			.agreement-text {
+				margin-left: 12rpx;
+				
+				.link {
+					color: #2563eb;
+					font-weight: 500;
+				}
+			}
+		}
+
+		/* 高端琉璃渐变主按钮 */
+		.submit-btn {
+			background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+			border-radius: 16rpx;
+			color: white;
+			font-size: 32rpx;
+			font-weight: 600;
+			height: 92rpx;
+			line-height: 92rpx;
+			text-align: center;
+			box-shadow: 0 10rpx 24rpx rgba(37, 99, 235, 0.2);
+			margin-bottom: 36rpx;
+			letter-spacing: 2rpx;
+		}
 	}
 
-	.uni-input,
-	.uni-select {
-		flex: 2;
-		padding: 5px;
-		border-radius: 5px;
-	}
-
-	.uni-switch {
-		margin-left: auto;
-	}
-
-	.banner {
-		width: 100%;
-	}
-
-	.banner image {
-		vertical-align: middle;
-		width: 100%;
-	}
-
-	.form {
-		padding: 36rpx 24rpx;
-	}
-
-	.codes {
-		color: #c20f22;
-		margin-right: 0rem;
-		position: absolute;
-		right: 30rpx;
-		top: 30rpx;
-		text-align: right;
-		width: 200rpx;
-	}
-
-	.list-ios {
-		margin: 0rem;
-	}
-
-	.list-ios>.item-block {
-		font-size: 32rpx;
-		padding: 0rem;
-		position: relative;
-	}
-
-	.list-ios>.item-block:first-child {
-		border: 0rem;
-	}
-
-
-	.input-wrapper>.select-ios:first-child {
-		padding-left: 0rem;
-	}
-
-	.form_tips {
-		font-size: 26rpx;
-		padding: 72rpx 30rpx 40rpx 30rpx;
-	}
-
-	.form_tips image {
-		margin-top: -4rpx;
-		margin-right: 16rpx;
-		vertical-align: middle;
-		width: 38rpx;
-	}
-
-	.form_tips i.fa {
-		color: #c20f22;
-		margin: -4rpx 10rpx 0rem 0rem;
-		vertical-align: middle;
-		font-size: 40rpx;
-	}
-
-	.form_tips span i {
-		color: #4a90e2;
-		font-style: normal;
-	}
-
-	.form_button {
-		background: #c20f22;
-		border-radius: 4rpx;
-		color: white;
-		font-size: 36rpx;
-		height: 88rpx;
-		line-height: 88rpx;
-		margin-top: 24rpx;
+	/* 底部微标 */
+	.footer-box {
 		text-align: center;
+		padding: 10rpx 0 40rpx;
+		
+		.footer-txt {
+			font-size: 24rpx;
+			color: #94a3b8;
+			letter-spacing: 1rpx;
+		}
 	}
 </style>
