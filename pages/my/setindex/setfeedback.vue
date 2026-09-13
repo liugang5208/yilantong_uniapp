@@ -2,9 +2,9 @@
 	<view class="feedback-container">
 		<!-- 意见内容输入框 -->
 		<view class="input-box">
-			<textarea 
-				v-model="content" 
-				placeholder="请详细描述您遇到的问题或宝贵建议..." 
+			<textarea
+				v-model="content"
+				placeholder="请详细描述您遇到的问题或宝贵建议..."
 				maxlength="500"
 				placeholder-style="color: #999;"
 			/>
@@ -13,16 +13,38 @@
 
 		<!-- 联系方式（选填） -->
 		<view class="contact-box">
-			<input 
-				type="text" 
-				v-model="contact" 
-				placeholder="请输入您的联系方式/手机号（选填）" 
+			<input
+				type="text"
+				v-model="contact"
+				placeholder="请输入您的联系方式/手机号（选填）"
 				placeholder-style="color: #999;"
 			/>
 		</view>
 
 		<!-- 提交按钮 -->
 		<button class="submit-btn" @click="submitFeedback">提交反馈</button>
+
+		<!-- 历史反馈记录 -->
+		<view class="history-section" v-if="list.length > 0">
+			<view class="history-title">我的反馈记录</view>
+			<view class="history-item" v-for="(item, index) in list" :key="item.id">
+				<view class="history-header">
+					<text class="history-time">{{ formatTime(item.times) }}</text>
+					<text :class="['history-status', item.status > 0 ? 'status-replied' : 'status-pending']">
+						{{ item.status > 0 ? '已回复' : '待回复' }}
+					</text>
+				</view>
+				<view class="history-content">{{ item.context }}</view>
+				<view class="history-reply" v-if="item.status > 0 && item.reply">
+					<text class="reply-label">客服回复：</text>
+					<text class="reply-text">{{ item.reply }}</text>
+				</view>
+			</view>
+		</view>
+
+		<view class="history-empty" v-else-if="loadedOnce">
+			<text>暂无反馈记录</text>
+		</view>
 	</view>
 </template>
 
@@ -30,12 +52,53 @@
 	export default {
 		data() {
 			return {
+				uid: '',
 				content: '', // 反馈内容
-				contact: ''  // 联系方式
+				contact: '',  // 联系方式
+				list: [],
+				loadedOnce: false
 			}
 		},
+		onLoad() {
+			let userInfo = uni.getStorageSync('loginTicket');
+			if (userInfo == null || userInfo == "") {
+				uni.showModal({
+					title: '提示',
+					content: '您还未登录，前往登录',
+					showCancel: false,
+					success: (res) => {
+						if (res.confirm) {
+							uni.reLaunch({ url: '/pages/login_md/login_md' });
+						}
+					}
+				});
+				return;
+			}
+			this.uid = userInfo.id;
+			this.loadFeedbackList();
+		},
 		methods: {
+			formatTime(times) {
+				if (!times) return '';
+				let d = new Date(Number(times) * 1000);
+				let pad = n => String(n).padStart(2, '0');
+				return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+			},
+			loadFeedbackList() {
+				let that = this;
+				that.$api.feedbackList({ uid: that.uid }).then(res => {
+					that.list = res.data || [];
+					that.loadedOnce = true;
+				}).catch(err => {
+					console.log(err);
+					that.loadedOnce = true;
+				});
+			},
 			submitFeedback() {
+				if (!this.uid) {
+					uni.showToast({ title: '请先登录', icon: 'none' });
+					return;
+				}
 				if (!this.content.trim()) {
 					uni.showToast({ title: '请输入反馈内容', icon: 'none' });
 					return;
@@ -43,24 +106,22 @@
 
 				uni.showLoading({ title: '提交中...' });
 
-				// 组装传给后台的参数（根据你们后端接口要求的字段名调整，比如 content / contact 等）
 				let params = {
+					uid: this.uid,
 					content: this.content,
 					contact: this.contact
 				};
 
-				// 调用后端接口
-				// 提示：请确保你的 $api 里面有对应的请求方法，或者换成你们项目通用的请求方式
 				this.$api.feedbackAdd(params).then(res => {
 					uni.hideLoading();
 					uni.showToast({ title: '提交成功，谢谢您的建议', icon: 'success' });
-					setTimeout(() => {
-						uni.navigateBack(); // 提交成功后自动返回上一页
-					}, 1500);
+					this.content = '';
+					this.contact = '';
+					this.loadFeedbackList();
 				}).catch(err => {
 					uni.hideLoading();
 					console.log(err);
-					uni.showToast({ title: '提交失败，请稍后重试', icon: 'none' });
+					uni.showToast({ title: (err && err.msg) || '提交失败，请稍后重试', icon: 'none' });
 				});
 			}
 		}
@@ -121,6 +182,84 @@
 			border-radius: 48rpx;
 			border: none;
 			box-shadow: 0 6rpx 16rpx rgba(0, 122, 255, 0.2);
+		}
+
+		.history-section {
+			margin-top: 50rpx;
+
+			.history-title {
+				font-size: 30rpx;
+				font-weight: 600;
+				color: #333333;
+				margin-bottom: 20rpx;
+			}
+
+			.history-item {
+				background-color: #ffffff;
+				border-radius: 16rpx;
+				padding: 24rpx;
+				margin-bottom: 20rpx;
+				box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.02);
+
+				.history-header {
+					display: flex;
+					align-items: center;
+					justify-content: space-between;
+					margin-bottom: 16rpx;
+
+					.history-time {
+						font-size: 24rpx;
+						color: #999999;
+					}
+
+					.history-status {
+						font-size: 22rpx;
+						padding: 4rpx 16rpx;
+						border-radius: 20rpx;
+					}
+
+					.status-pending {
+						background-color: #fff4e5;
+						color: #ff9500;
+					}
+
+					.status-replied {
+						background-color: #e8f9ee;
+						color: #34c759;
+					}
+				}
+
+				.history-content {
+					font-size: 28rpx;
+					color: #333333;
+					line-height: 1.5;
+				}
+
+				.history-reply {
+					margin-top: 16rpx;
+					padding: 16rpx;
+					background-color: #f0f7ff;
+					border-radius: 12rpx;
+					font-size: 26rpx;
+					line-height: 1.5;
+
+					.reply-label {
+						color: #007aff;
+						font-weight: 600;
+					}
+
+					.reply-text {
+						color: #333333;
+					}
+				}
+			}
+		}
+
+		.history-empty {
+			margin-top: 60rpx;
+			text-align: center;
+			font-size: 26rpx;
+			color: #999999;
 		}
 	}
 </style>

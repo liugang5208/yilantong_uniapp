@@ -74,8 +74,9 @@
 						    <text class="paytype-tag-inline" style="border-color: #ffccc7; color: #ff4d4f; background-color: #fff5f5;" v-if="String(item.paymode) === '1'">物流代收</text>
 						    
 						    <text class="paytype-tag-inline" style="color: #faad14;" v-if="String(item.paymode) === '3' && item.status == 0">凭证待上传</text>
-						    <text class="paytype-tag-inline" style="color: #1890ff;" v-if="String(item.paymode) === '3' && item.status == 1">凭证待审核</text>
-						    <text class="paytype-tag-inline" style="color: #52c41a;" v-if="String(item.paymode) === '3' && item.status >= 2">凭证已通过</text>
+						    <text class="paytype-tag-inline" style="color: #1890ff;" v-if="String(item.paymode) === '3' && item.status == 1 && item.audit_status == 0">凭证待审核</text>
+						    <text class="paytype-tag-inline" style="color: #ff4d4f;" v-if="String(item.paymode) === '3' && item.status == 1 && item.audit_status == 2">凭证审核未通过</text>
+						    <text class="paytype-tag-inline" style="color: #52c41a;" v-if="String(item.paymode) === '3' && (item.status >= 2 || (item.status == 1 && item.audit_status == 1))">凭证已通过</text>
 						</view>
 					</view>
 
@@ -111,9 +112,10 @@
 					<view class="footer-placeholder"></view>
 					<view class="btn-group">
 						<button v-if="item.status==0 && item.paymode==3" class="btn-primary-soft" @click="gotoInfos(item.id)">上传付款截图</button>
+						<button v-if="item.status==1 && item.paymode==3 && item.audit_status==2" class="btn-primary-soft" @click="gotoInfos(item.id)">重新提交凭证</button>
 						<button v-if="item.status==0 && item.paymode==4" class="btn-primary-soft" @click="handleSignMerchantOrder(item)">协议商户订单</button>
 						<button v-if="item.status==0 && item.paymode!=3 && item.paymode!=4" class="btn-primary-soft" @click="setPay(item)">立即付款</button>
-						<button v-if="item.status==0" class="btn-default-soft" @click="promptCancelOrder(item.id)">取消订单</button>
+						<button v-if="item.status==0 || (item.status==1 && item.paymode==3 && item.audit_status!=1)" class="btn-default-soft" @click="promptCancelOrder(item.id)">取消订单</button>
 						<button v-if="item.status==1" class="btn-primary-soft" @click="gotoInfos(item.id)">订单详情</button>
 						<button v-if="item.status==2" class="btn-primary-soft" @click="openLogisticsModal(item)">物流信息</button>
 						<!-- 需求5：待收货页面增加手动确认收货按钮 -->
@@ -282,7 +284,7 @@
 				
 				<view style="display: flex; gap: 20rpx; width: 100%; margin-top: 24rpx;">
 					<button @tap="copyLogisticsInfo" style="flex: 1; background-color: #52c41a; color: #fff; border-radius: 40rpx; font-size: 28rpx; height: 80rpx; line-height: 80rpx; font-weight: 600;">一键复制信息</button>
-					<button @tap="closeLogisticsModal" style="flex: 1; background-color: #E11D48; color: #fff; border-radius: 40rpx; font-size: 28rpx; height: 80rpx; line-height: 80rpx; font-weight: 600;">我知道了</button>
+					<button v-if="logisticsImages.length > 0" @tap="viewLogisticsImages" style="flex: 1; background-color: #1890FF; color: #fff; border-radius: 40rpx; font-size: 28rpx; height: 80rpx; line-height: 80rpx; font-weight: 600;">查看物流图片</button>
 				</view>
 			</view>
 		</view>
@@ -325,6 +327,7 @@
 				showLogisticsModal: false,
 				logisticsLoading: false,
 				logisticsData: [],
+				logisticsImages: [],
 				rawTransData: null,
 				
 				activeCardId: null,
@@ -349,27 +352,28 @@
 				
 				// 需求3 & 4：自动化边界过滤逻辑（7天未付款自动取消不保存、15天待收货自动改为已完成）
 				const nowTimestamp = new Date().getTime();
-				
+
 				raw = raw.filter(item => {
 					let itemTime = Number(item.times || item.time_zone || item.create_time || item.add_time || item.time || 0);
 					if (itemTime < 1000000000) itemTime *= 1000; // 兼容秒级时间戳
-					
+
 					// 需求3：待付款订单超时隐藏（以天数为单位判断，比如超过 10 天）
+					// 后端 crontab（Inter/Order::expireAuto()）上线后此段前端本地隐藏逻辑即可删除，目前先保留作为兜底
 					if (String(item.status) === '0' && itemTime > 0) {
 					    // 限制：必须确保 itemTime 是正常的时间戳（比如小于当前时间，且大于 2020 年 1577836800000）
-					    const minValidTime = 1577836800000; 
-					    
+					    const minValidTime = 1577836800000;
+
 					    if (itemTime > minValidTime) {
 					        const nowTime = new Date().getTime();
 					        const days = (nowTime - itemTime) / (1000 * 60 * 60 * 24); // 计算真正相差的天数
-					        
+
 					        // 如果超过 10 天未付款，则隐藏
 					        if (days > 10) {
 					            return false;
 					        }
 					    }
 					}
-					
+
 					// 需求4：待收货状态（status == 2）最多维持 15 天，超时自动视为完成
 					if (String(item.status) === '2' && itemTime > 0) {
 						const fifteenDaysMs = 15 * 24 * 60 * 60 * 1000;
@@ -582,6 +586,7 @@
 				that.showLogisticsModal = true;
 				that.logisticsLoading = true;
 				that.logisticsData = [];
+				that.logisticsImages = [];
 				that.rawTransData = null;
 	
 				let apiFunc = that.$api.orderOinfo || that.$api.order_info;
@@ -597,6 +602,7 @@
 					let detail = ret.data || ret;
 					
 					if (detail && detail.trans_vo) {
+						that.logisticsImages = Array.isArray(detail.trans_vo.trans_imgs) ? detail.trans_vo.trans_imgs : [];
 						that.rawTransData = {
 							orderNo: item.order_sn || item.sn || item.id,
 							tradeSn: detail.trans_vo.trade_sn,
@@ -657,7 +663,12 @@
 			closeLogisticsModal() {
 				this.showLogisticsModal = false;
 				this.logisticsData = [];
+				this.logisticsImages = [];
 				this.rawTransData = null;
+			},
+			viewLogisticsImages() {
+				if (!this.logisticsImages || this.logisticsImages.length === 0) return;
+				uni.previewImage({ urls: this.logisticsImages, current: 0 });
 			},
 			getOrderTime(item) {
 				if (!item) return '';

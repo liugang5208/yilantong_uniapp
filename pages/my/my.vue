@@ -130,8 +130,7 @@
 				title: 'Hello',
 				infos: {},
 				uid: '',
-				servicePhone: '18883333289', // 已按要求写死客服一键拨号电话
-				
+
 				tagColors: [
 					'#0284c7', 
 					'#d97706', 
@@ -206,7 +205,12 @@
 		},
 		methods: {
 			makePhoneCall() {
-				uni.makePhoneCall({ phoneNumber: this.servicePhone });
+				let phone = this.infos && this.infos.ac_level_tel;
+				if (!phone) {
+					uni.showToast({ title: '暂无客服电话', icon: 'none' });
+					return;
+				}
+				uni.makePhoneCall({ phoneNumber: phone });
 			},
 			NavToOrder(st) {
 				uni.navigateTo({ url: '/pages/my/order/order?st=' + st });

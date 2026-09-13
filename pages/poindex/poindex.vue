@@ -94,19 +94,19 @@
 			<template v-if="form.accountType === 'enterprise'">
 				<view class="upload_file">
 					<view class="upload_file_item">
-						<view class="upload_box has-image-box" v-if="isValidImage(form.pic_id)" @click="chooseImage('pic_id')">
-							<image mode="aspectFill" :src="form.pic_id" class="imgs" />
+						<view class="upload_box has-image-box" v-if="isValidImage(form.pic_head)" @click="chooseImage('pic_head')">
+							<image mode="aspectFill" :src="form.pic_head" class="imgs" />
 						</view>
-						<view class="upload_box empty-box" v-else @click="chooseImage('pic_id')">
+						<view class="upload_box empty-box" v-else @click="chooseImage('pic_head')">
 							<u-icon name="plus" color="#909399" :size="32"></u-icon>
 							<text class="main-tip">上传营业执照</text>
 						</view>
 					</view>
 					<view class="upload_file_item">
-						<view class="upload_box has-image-box" v-if="isValidImage(form.pic_back)" @click="chooseImage('pic_back')">
-							<image mode="aspectFill" :src="form.pic_back" class="imgs" />
+						<view class="upload_box has-image-box" v-if="isValidImage(form.pic_cont)" @click="chooseImage('pic_cont')">
+							<image mode="aspectFill" :src="form.pic_cont" class="imgs" />
 						</view>
-						<view class="upload_box empty-box" v-else @click="chooseImage('pic_back')">
+						<view class="upload_box empty-box" v-else @click="chooseImage('pic_cont')">
 							<u-icon name="plus" color="#909399" :size="32"></u-icon>
 							<text class="main-tip">负责人证件照</text>
 						</view>
@@ -152,6 +152,7 @@
 </template>
 
 <script>
+	import { pathToBase64 } from 'image-tools'
 	export default {
 		data() {
 			return {
@@ -168,8 +169,10 @@
 					contactPhone: '',
 					wechat: '',
 					email: '',
-					pic_id: '',
-					pic_back: '',
+					pic_id: '',   // 个人：身份证正面
+					pic_back: '', // 个人：身份证反面
+					pic_head: '', // 企业：营业执照
+					pic_cont: '', // 企业：负责人证件照
 				}
 			}
 		},
@@ -221,7 +224,17 @@
 					count: 1,
 					sizeType: ['compressed'],
 					success: (res) => {
-						that.form[field] = res.tempFilePaths[0];
+						uni.getImageInfo({
+							src: res.tempFilePaths[0],
+							success: (path) => {
+								pathToBase64(path.path).then(base64 => {
+									that.form[field] = base64;
+								}).catch(err => {
+									console.log(err);
+									uni.showToast({ title: '图片处理失败，请重试', icon: 'none' });
+								});
+							}
+						});
 					}
 				});
 			},
@@ -263,18 +276,19 @@
 					}
 					that.isStreetModified = false;
 					
-					if (data.accountType) {
-						that.form.accountType = data.accountType;
-					} else {
-						that.form.accountType = 'enterprise';
-					}
+					// ac_type: 0=个人用户 1=店铺经销 2=企业单位（后端字段，见 users.ac_type）
+					that.form.accountType = data.ac_type == 0 ? 'personal' : 'enterprise';
 
-					that.form.idCardOrLicence = data.idCardOrLicence || data.licence || data.card_id || '';
-					that.form.contactPhone = data.contactPhone || data.phone2 || '';
+					that.form.idCardOrLicence = that.form.accountType === 'personal'
+						? (data.idcard || '')
+						: (data.licence_no || '');
+					that.form.contactPhone = data.maphone || '';
 					that.form.wechat = data.wechat || '';
 					that.form.email = data.email || '';
 					that.form.pic_id = that.isValidImage(data.pic_id) ? data.pic_id : '';
 					that.form.pic_back = that.isValidImage(data.pic_back) ? data.pic_back : '';
+					that.form.pic_head = that.isValidImage(data.pic_head) ? data.pic_head : '';
+					that.form.pic_cont = that.isValidImage(data.pic_cont) ? data.pic_cont : '';
 				}).catch(err => {
 					console.log(err);
 				});
@@ -306,7 +320,9 @@
 					wechat: that.form.wechat,
 					email: that.form.email,
 					pic_id: that.isValidImage(that.form.pic_id) ? that.form.pic_id : '',
-					pic_back: that.isValidImage(that.form.pic_back) ? that.form.pic_back : ''
+					pic_back: that.isValidImage(that.form.pic_back) ? that.form.pic_back : '',
+					pic_head: that.isValidImage(that.form.pic_head) ? that.form.pic_head : '',
+					pic_cont: that.isValidImage(that.form.pic_cont) ? that.form.pic_cont : ''
 				};
 
 				this.$api.updates(params).then(ret => {

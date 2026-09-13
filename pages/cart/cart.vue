@@ -93,12 +93,6 @@
 								    <text class="s-v font-blue">{{x.minNum || 500}}</text>
 								</div>
 
-								<!-- 3. 单品备注（条件渲染：有则完整显示占一个格子或整行，无则自动隐藏不留空白） -->
-								<div class="spec-grid-item full-width-cell" v-if="x.remark || x.list.remark || x.memo" @click.stop="showLongText('单品备注', x.remark || x.list.remark || x.memo)">
-									<text class="s-k">单品备注：</text>
-									<text class="s-v font-remark">{{ x.remark || x.list.remark || x.memo }}</text>
-								</div>
-
 								<!-- 4. 执行单价与小计金额：严格作为表格中的最后两格，单品小计精确后两位显示 -->
 								<div class="spec-grid-item">
 									<text class="s-k">执行单价：</text>
@@ -110,6 +104,12 @@
 								</div>
 							</div>
 						</view>
+
+						<!-- 单品备注（条件渲染：有则展开显示，无则自动隐藏不留空白），放在调整数量行的虚线分割线上方 -->
+						<div class="spec-grid-item full-width-cell cart-item-remark-row" v-if="x.remark || x.list.remark || x.memo" @click.stop="showLongText('单品备注', x.remark || x.list.remark || x.memo)">
+							<text class="s-k">单品备注：</text>
+							<text class="s-v font-remark">{{ x.remark || x.list.remark || x.memo }}</text>
+						</div>
 
 						<!-- 5. 调整数量行（取消左侧起订量胶囊，右侧调整数量和加减框靠右） -->
 						<view class="card-nums-lower-row">
@@ -397,11 +397,11 @@
 				let that = this;
 				uni.showModal({
 					title: '提示',
-					content: '确定要清空购物车吗？',
+					content: '确定要清空当前分类下的购物车商品吗？',
 					success: (res) => {
 						if (res.confirm) {
 							uni.showLoading({ title: "处理中..." });
-							that.$api.cartclear({ uid: that.uid }).then(ret => {
+							that.$api.cartclear({ uid: that.uid, ticket: that.ticket }).then(ret => {
 								that.doIninit();
 								that.fetchAllTabCounts();
 								uni.hideLoading();
@@ -785,6 +785,11 @@
 		.yuan-sign { font-size: 20rpx; font-weight: 600; margin-right: 2rpx; }
 	}
 	
+	/* 单品备注：位于调整数量行的虚线分割线上方，有内容才渲染 */
+	.cart-item-remark-row {
+		margin-top: 8rpx;
+	}
+
 	/* 底部调整数量：右侧对齐并保持横向 */
 	.card-nums-lower-row {
 		display: flex;

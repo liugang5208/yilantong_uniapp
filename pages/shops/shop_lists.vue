@@ -55,10 +55,10 @@
 			<!-- 2. 商品表格标题栏 (自适应 4 列网格) -->
 			<view :class="['iosTba', (isSticky && act_index==0) ? 'fixed-header' : '']" v-if="act_index==0 && list_count>0">
 				<view class="lists bg table-header-floating adaptive-grid-row">
-					<div class="col-item" v-if="keys">{{keys.key_1}}</div>
-					<div class="col-item" v-if="keys">{{keys.key_2}}</div>
+					<div class="col-item" v-if="keys">{{keys.key_5}}</div>
+					<div class="col-item" v-if="keys">{{keys.key_6}}</div>
 					<div class="col-item" v-if="keys">
-						<span>{{keys.key_3}}</span>
+						<span>{{keys.key_7}}</span>
 					</div>
 					<div class="col-item">商品单价</div>
 				</view>
@@ -70,13 +70,13 @@
 			<view v-for="(x,i) in list" :key="i" class="lists adaptive-grid-row click-scale-effect" :class="{'ticket_color': clickIndex==i}"
 				@click="openBuyer(x,i)">
 				<div class="col-item modal-cell-text">
-					<span>{{x.value_0}}</span>
+					<span>{{x.value_5}}</span>
 				</div>
 				<div class="col-item modal-cell-text">
-					<span>{{x.value_1}}</span>
+					<span>{{x.value_6}}</span>
 				</div>
 				<div class="col-item modal-cell-text">
-					<span>{{x.value_2}}</span>
+					<span>{{x.value_7}}</span>
 				</div>
 				<div class="col-item modal-cell-text">
 					<span :class="getPriceColorClass()">
@@ -106,26 +106,26 @@
 
 		<!-- 底部筛选面板：升级轻奢乳灰微透渐变与立体上阴影，实现视觉彻底隔离 -->
 		<view class="footer" v-if="act_index==0">
-			<!-- 标准选项 -->
+			<!-- 标准选项：来自"标准选项管理"分组 -->
 			<view class="footer-row">
 				<text class="footer-label">标准:</text>
 				<view class="footer-pills-scroll">
-					<view v-for="(x, i) in blank" :key="i" 
-						v-if="i < 10"
-						:class="['pill-transition', cat_index == i + 1 ? 'pill-success' : 'pill-default']" 
-						@click="blankChange(i + 1)">
-						{{ x.catname }}
+					<view v-for="(g, i) in groups" :key="g.id"
+						:class="['pill-transition', group_id == g.id ? 'pill-success' : 'pill-default']"
+						@click="groupChange(g)">
+						{{ g.name }}
 					</view>
 				</view>
 			</view>
-			<!-- 类型选项 -->
+			<!-- 类型选项：来自"商品属性管理"，随所选标准分组联动 -->
 			<view class="footer-row">
 				<text class="footer-label">类型:</text>
 				<view class="footer-pills-scroll">
-					<view v-for="(tp, tIdx) in subTypeList" :key="tIdx"
-						:class="['pill-transition', sub_type_index == tIdx ? 'pill-navy' : 'pill-default']" 
-						@click="subTypeChange(tIdx)">
-						{{ tp.name || tp.title || tp }}
+					<view v-for="(x, i) in blank" :key="x.id"
+						v-if="i < 10"
+						:class="['pill-transition', cat_index == x.cat_index ? 'pill-navy' : 'pill-default']"
+						@click="blankChange(x)">
+						{{ x.catname }}
 					</view>
 				</view>
 			</view>
@@ -146,16 +146,16 @@
 		<view v-if="copen>0" @touchmove.stop.prevent="preventScroll" class="popup-top-sticky-container">
 			<view v-if="list_count>0">
 				<view class="lists bg table-header-selected-black adaptive-grid-row">
-					<div class="col-item" v-if="keys">{{keys.key_1}}</div>
-					<div class="col-item" v-if="keys">{{keys.key_2}}</div>
-					<div class="col-item" v-if="keys">{{keys.key_3}}</div>
+					<div class="col-item" v-if="keys">{{keys.key_5}}</div>
+					<div class="col-item" v-if="keys">{{keys.key_6}}</div>
+					<div class="col-item" v-if="keys">{{keys.key_7}}</div>
 					<div class="col-item">商品单价</div>
 				</view>
 			</view>
 			<view class="lists popup-row-bright adaptive-grid-row" v-if="list.length>0 && list[clickIndex]">
-				<div class="col-item modal-cell-text">{{list[clickIndex].value_0}}</div>
-				<div class="col-item modal-cell-text">{{list[clickIndex].value_1}}</div>
-				<div class="col-item modal-cell-text">{{list[clickIndex].value_2}}</div>
+				<div class="col-item modal-cell-text">{{list[clickIndex].value_5}}</div>
+				<div class="col-item modal-cell-text">{{list[clickIndex].value_6}}</div>
+				<div class="col-item modal-cell-text">{{list[clickIndex].value_7}}</div>
 				<div class="col-item popup-price-text modal-cell-text price-red">
 					{{transpoint(list[clickIndex].market*ticket*ulevel['up'])}}
 				</div>
@@ -187,34 +187,34 @@
 						</view>
 					</view>
 					<view class="spec-item">
-						<text class="s-label">产品型号：</text>
+						<text class="s-label">{{keys ? keys.key_6 : '产品型号'}}：</text>
 						<view class="s-val-outer">
-							<view class="s-val-marquee" :class="{'marquee-running': isTextOverflow(cdata.value_1, 12)}">
-								<text class="s-val text-content-red">{{cdata.value_1}}</text>
-								<text class="s-val text-content-red duplicate-text" v-if="isTextOverflow(cdata.value_1, 12)">{{cdata.value_1}}</text>
+							<view class="s-val-marquee" :class="{'marquee-running': isTextOverflow(cdata.value_6, 12)}">
+								<text class="s-val text-content-red">{{cdata.value_6}}</text>
+								<text class="s-val text-content-red duplicate-text" v-if="isTextOverflow(cdata.value_6, 12)">{{cdata.value_6}}</text>
 							</view>
 						</view>
 					</view>
 					<view class="spec-item">
-						<text class="s-label">电压等级：</text>
+						<text class="s-label">{{keys ? keys.key_5 : '电压等级'}}：</text>
 						<view class="s-val-outer">
-							<view class="s-val-marquee" :class="{'marquee-running': isTextOverflow(cdata.value_0, 12)}">
-								<text class="s-val text-content-red">{{cdata.value_0}}</text>
-								<text class="s-val text-content-red duplicate-text" v-if="isTextOverflow(cdata.value_0, 12)">{{cdata.value_0}}</text>
+							<view class="s-val-marquee" :class="{'marquee-running': isTextOverflow(cdata.value_5, 12)}">
+								<text class="s-val text-content-red">{{cdata.value_5}}</text>
+								<text class="s-val text-content-red duplicate-text" v-if="isTextOverflow(cdata.value_5, 12)">{{cdata.value_5}}</text>
 							</view>
 						</view>
 					</view>
 					<view class="spec-item">
-						<text class="s-label">产品规格：</text>
+						<text class="s-label">{{keys ? keys.key_7 : '产品规格'}}：</text>
 						<view class="s-val-outer">
-							<view class="s-val-marquee" :class="{'marquee-running': isTextOverflow(cdata.value_2, 12)}">
-								<text class="s-val text-content-red">{{cdata.value_2}}</text>
-								<text class="s-val text-content-red duplicate-text" v-if="isTextOverflow(cdata.value_2, 12)">{{cdata.value_2}}</text>
+							<view class="s-val-marquee" :class="{'marquee-running': isTextOverflow(cdata.value_7, 12)}">
+								<text class="s-val text-content-red">{{cdata.value_7}}</text>
+								<text class="s-val text-content-red duplicate-text" v-if="isTextOverflow(cdata.value_7, 12)">{{cdata.value_7}}</text>
 							</view>
 						</view>
 					</view>
 					<view class="spec-item">
-						<text class="s-label">质量标准：</text>
+						<text class="s-label">{{keys ? keys.key_1 : '质量标准'}}：</text>
 						<view class="s-val-outer">
 							<view class="s-val-marquee">
 								<text class="s-val text-content-red">国标保检</text>
@@ -244,7 +244,7 @@
 			<view class="category-section-box blue-section-bg">
 				<view class="specs-grid-box">
 					<view class="spec-item">
-						<text class="s-label">计量单位：</text>
+						<text class="s-label">{{keys ? keys.key_4 : '计量单位'}}：</text>
 						<view class="s-val-outer">
 							<view class="s-val-marquee">
 								<text class="s-val text-content-blue">米</text>
@@ -277,7 +277,7 @@
 						</view>
 					</view>
 					<view class="spec-item">
-						<text class="s-label">供应方式：</text>
+						<text class="s-label">{{keys ? keys.key_0 : '供应方式'}}：</text>
 						<view class="s-val-outer">
 							<view class="s-val-marquee">
 								<text class="s-val text-content-blue">现货供应</text>
@@ -465,9 +465,10 @@
 				gid: '',
 				act_toite: 0,
 				act_index: 0,
-				cat_index: 1,
-				sub_type_index: 0,
-				
+				cat_index: null,
+				groups: [],
+				group_id: 0,
+
 				item_remark: '', // 单品备注字段
 				showRemarkModal: false, // 控制单品备注填写弹窗显隐
 				tempRemark: '', // 弹窗中暂存的备注内容
@@ -478,10 +479,6 @@
 				reportSvgIcon: 'data:image/svg+xml;utf8,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><circle cx="32" cy="32" r="30" fill="#f0fdf4" stroke="#86efac" stroke-width="3"/><path d="M40 18H24a3 3 0 0 0-3 3v22a3 3 0 0 0 3 3h16a3 3 0 0 0 3-3V21a3 3 0 0 0-3-3z" fill="#ffffff" stroke="#16a34a" stroke-width="3" stroke-linejoin="round"/><polyline points="40 18 40 26 32 26" fill="none" stroke="#16a34a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><line x1="36" y1="33" x2="28" y2="33" stroke="#16a34a" stroke-width="3" stroke-linecap="round"/><line x1="36" y1="39" x2="28" y2="39" stroke="#16a34a" stroke-width="3" stroke-linecap="round"/></svg>'),
 				cartSvgIcon: 'data:image/svg+xml;utf8,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><circle cx="32" cy="32" r="30" fill="#eff6ff" stroke="#93c5fd" stroke-width="3"/><circle cx="26" cy="48" r="3" fill="#2563eb"/><circle cx="44" cy="48" r="3" fill="#2563eb"/><path d="M16 18h6l4.5 20h17.5L48 26H24" fill="none" stroke="#2563eb" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/></svg>'),
 				phoneSvgIcon: 'data:image/svg+xml;utf8,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><circle cx="32" cy="32" r="30" fill="#fff1f2" stroke="#fecdd3" stroke-width="3"/><path d="M45.5 42.5v3.5a3 3 0 0 1-3.27 3 29.69 29.69 0 0 1-12.91-4.58 29.25 29.25 0 0 1-8.98-8.98 29.69 29.69 0 0 1-4.58-12.91 3 3 0 0 1 3-3.27h3.5a3 3 0 0 1 3 2.58c.23 1.62.68 3.19 1.34 4.67a3 3 0 0 1-.68 3.26l-2.15 2.15a24 24 0 0 0 9 9l2.15-2.15a3 3 0 0 1 3.26-.68c1.48.66 3.05 1.11 4.67 1.34a3 3 0 0 1 2.58 3z" fill="#e11d48"/></svg>'),
-
-				subTypeList: [
-					'无阻燃型', '阻燃C级', '阻燃B级', '阻燃A级'
-				],
 
 				loading: '',
 				uid: '',
@@ -550,8 +547,8 @@
 				});
 			} else {
 				this.uid = userInfo.id
-				this.cat_index = 1;
-				this.sub_type_index = 0;
+				this.cat_index = null;
+				this.group_id = 0;
 				this.ticket_index = 0;
 				this.doIninit()
 			}
@@ -601,7 +598,7 @@
 			getActiveStandardName() {
 				let that = this;
 				if (that.blank && that.blank.length > 0) {
-					let currentStandard = that.blank[that.cat_index - 1];
+					let currentStandard = that.blank.find(b => b.cat_index == that.cat_index);
 					if (currentStandard && currentStandard.catname) {
 						return currentStandard.catname;
 					}
@@ -661,20 +658,25 @@
 			},
 			callnumber() {
 				if (typeof plus !== 'undefined') {
-					plus.runtime.openURL('tel:' + (this.ginfo ? this.ginfo.g_phone : ''));
+					plus.runtime.openURL('tel:' + (this.ulevel ? this.ulevel.tel : ''));
 				} else {
 					uni.showToast({ title: '仅支持 App 拨打电话', icon: 'none' });
 				}
 			},
-			blankChange(type) {
+			blankChange(item) {
 				let that = this;
-				uni.vibrateShort(); 
-				that.cat_index = type;
+				if (that.cat_index == item.cat_index) return;
+				uni.vibrateShort();
+				that.cat_index = item.cat_index;
 				that.doIninit();
 			},
-			subTypeChange(tIdx) {
-				uni.vibrateShort(); 
-				this.sub_type_index = tIdx;
+			groupChange(g) {
+				let that = this;
+				if (that.group_id == g.id) return;
+				uni.vibrateShort();
+				that.group_id = g.id;
+				that.cat_index = null;
+				that.doIninit();
 			},
 			goCart() {
 				uni.navigateTo({ url: '/pages/cart/cart?pushType=1' })
@@ -1045,19 +1047,22 @@
 			transpoint(value) { return parseFloat(value || 0).toFixed(2); },
 			async doIninit() {
 				let that = this;
-				var params = { 
-					uid: that.uid, 
-					gid: that.gid, 
+				var params = {
+					uid: that.uid,
+					gid: that.gid,
+					group_id: that.group_id,
 					cat_index: that.cat_index,
-					_t: Date.now() 
+					_t: Date.now()
 				};
 				try {
 					let ret = await that.$api.glist(params);
 					if (!ret || !ret.data) return;
 					that.ginfo = ret.data.info;
 					that.ulevel = ret.data.ulevel;
+					that.groups = ret.data.groups || [];
+					that.group_id = ret.data.group_id;
 					that.cat_index = ret.data.cat_index;
-					that.blank = ret.data.blank; 
+					that.blank = ret.data.blank;
 					that.blank_info = ret.data.blank_info;
 
 					if (that.blank_info && that.blank_info.source_url != null) { that.blank_img = that.blank_info.source_url.length; }

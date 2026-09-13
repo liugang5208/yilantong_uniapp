@@ -62,23 +62,29 @@
 		},
 		methods: {
 			async init() {
-				let res = await this.$api.load_banner()
-				
-				if (res.data.type) {
-					this.info.type = res.data.type;
-				} else {
-					this.info.type = 'image';
-				}
-				
-				this.info.url = res.data.url || res.data.list[res.data.show];
+				try {
+					let res = await this.$api.load_banner()
 
-				if (this.info.type === 'video') {
-					this.singleLineVideoUrl = this.info.url.replace(/(\r\n|\n|\r)/gm, "");
-				} else {
-					this.singleLineBase64 = this.info.url.replace(/(\r\n|\n|\r)/gm, "");
-					// 图片直接给予渲染许可
-					this.resourceLoaded = true;
-					this.startCountdown(5);
+					// 没有配置/启用任何开屏广告时，不展示空白/异常界面，直接跳过进入首页
+					if (!res.data || !res.data.url) {
+						return this.doJump();
+					}
+
+					this.info.type = res.data.type === 'video' ? 'video' : 'image';
+					this.info.url = res.data.url;
+
+					if (this.info.type === 'video') {
+						this.singleLineVideoUrl = this.info.url.replace(/(\r\n|\n|\r)/gm, "");
+					} else {
+						this.singleLineBase64 = this.info.url.replace(/(\r\n|\n|\r)/gm, "");
+						// 图片直接给予渲染许可
+						this.resourceLoaded = true;
+						this.startCountdown(5);
+					}
+				} catch (e) {
+					// 广告接口异常（网络失败等）：不能让用户卡在黑屏上，直接跳过
+					console.log(e);
+					this.doJump();
 				}
 			},
 

@@ -669,7 +669,7 @@
 				<view class="custom-service-box">
 					<view class="cs-icon-circle">📞</view>
 					<text class="cs-main-tip">技术服务与意见反馈专用号码</text>
-					<text class="cs-phone-number">18883333289</text>
+					<text class="cs-phone-number">{{ ulevel && ulevel.tel ? ulevel.tel : '暂无客服电话' }}</text>
 					<text class="cs-desc-time">服务时间：周一至周五 9:00 - 17:00</text>
 					<div class="cs-call-action-btn" @click="makePhoneCall">
 						<text>立即拨打客服热线</text>
@@ -836,8 +836,13 @@
 				this.$refs.popup.open();
 			},
 			makePhoneCall() {
+				let phone = this.ulevel && this.ulevel.tel;
+				if (!phone) {
+					uni.showToast({ title: '暂无客服电话', icon: 'none' });
+					return;
+				}
 				uni.makePhoneCall({
-					phoneNumber: '18883333289',
+					phoneNumber: phone,
 					fail: (err) => { console.log('取消拨打', err); }
 				});
 			},

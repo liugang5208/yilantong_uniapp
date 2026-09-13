@@ -87,6 +87,12 @@
 					</view>
 				</view>
 
+				<!-- 单品备注：有则显示，无则自动隐藏 -->
+				<view class="item-remark-row" v-if="item.remark" @click="openDetailModalConditionally('单品备注全称', item.remark, $event)">
+					<text class="attr-label">单品备注：</text>
+					<text class="attr-val ellipsis-text remark-text-styled">{{ item.remark }}</text>
+				</view>
+
 				<!-- 第四行：压轴财务/数量结算区 -->
 				<view class="card-financial-dock">
 					<view class="fin-item">
@@ -282,17 +288,17 @@
 
 				<scroll-view scroll-y class="template-items-scroll">
 					<view class="empty-quick-tips" v-if="quickTemplates.length === 0">暂无快捷模板，赶快添加一条吧~</view>
-					<view class="template-manage-card" v-for="(item, idx) in quickTemplates" :key="idx">
-						<view class="manage-card-body" @click="applyQuickTemplate(item)">
+					<view class="template-manage-card" v-for="(item, idx) in quickTemplates" :key="item.id">
+						<view class="manage-card-body" @click="applyQuickTemplate(item.content)">
 							<view class="card-mini-indicator">
 								<view class="dot-icon"></view>
 								<text class="indicator-title">快捷条款</text>
 							</view>
-							<text class="manage-item-text">{{ item }}</text>
+							<text class="manage-item-text">{{ item.content }}</text>
 						</view>
 						<view class="manage-card-footer">
-							<div class="action-btn-pill use-pill" @click="applyQuickTemplate(item)"><text>选用</text></div>
-							<div class="action-btn-pill del-pill" @click="deleteQuickTemplateItem(idx)"><text>删除</text></div>
+							<div class="action-btn-pill use-pill" @click="applyQuickTemplate(item.content)"><text>选用</text></div>
+							<div class="action-btn-pill del-pill" @click="deleteQuickTemplateItem(item.id)"><text>删除</text></div>
 						</view>
 					</view>
 				</scroll-view>
@@ -315,18 +321,18 @@
 				</div>
 
 				<scroll-view scroll-y class="template-items-scroll">
-					<view class="empty-quick-tips" v-if="repCompList.length === 0">暂无常用单位，赶快添加一个吧~</view>
-					<view class="template-manage-card" v-for="(item, idx) in repCompList" :key="idx">
-						<view class="manage-card-body" @click="applyRepComp(item)">
+					<view class="empty-quick-tips" v-if="currentRepCompList.length === 0">暂无常用单位，赶快添加一个吧~</view>
+					<view class="template-manage-card" v-for="(item, idx) in currentRepCompList" :key="item.id">
+						<view class="manage-card-body" @click="applyRepComp(item.content)">
 							<view class="card-mini-indicator">
 								<view class="dot-icon"></view>
 								<text class="indicator-title">公司抬头名称</text>
 							</view>
-							<text class="manage-item-text">{{ item }}</text>
+							<text class="manage-item-text">{{ item.content }}</text>
 						</view>
 						<view class="manage-card-footer">
-							<div class="action-btn-pill use-pill" @click="applyRepComp(item)"><text>选用</text></div>
-							<div class="action-btn-pill del-pill" @click="deleteRepCompItem(idx)"><text>删除</text></div>
+							<div class="action-btn-pill use-pill" @click="applyRepComp(item.content)"><text>选用</text></div>
+							<div class="action-btn-pill del-pill" @click="deleteRepCompItem(item.id)"><text>删除</text></div>
 						</view>
 					</view>
 				</scroll-view>
@@ -508,11 +514,17 @@
 				customModalContent: '确定要清空报价单全部商品吗？',
 				quickModalShow: false,
 				newQuickText: '',
-				quickTemplates: [],
+				quickTemplates: [], // 备注模板库(type=3)，元素为 {id, content}
 				repCompModalShow: false,
 				repCompTarget: 'rep', // 记录当前快速选择单位的目标：'rep'代表报价单位，'question'代表询价单位
 				newRepCompText: '',
-				repCompList: []
+				repCompListRep: [], // 报价单位库(type=1)
+				repCompListQuestion: [] // 询价单位库(type=2)
+			}
+		},
+		computed: {
+			currentRepCompList() {
+				return this.repCompTarget === 'question' ? this.repCompListQuestion : this.repCompListRep;
 			}
 		},
 		onLoad() {
@@ -533,8 +545,9 @@
 			} else {
 				this.uid = userInfo.id;
 				this.doIninit();
-				this.loadLocalQuickTemplates();
-				this.loadLocalRepComps();
+				this.loadQuickTemplates();
+				this.loadRepCompList(1);
+				this.loadRepCompList(2);
 			}
 			uni.$on("noteInformation", data => {
 				this.myCallbackNoteInformation(data)
@@ -612,23 +625,12 @@
 				}
 				uni.showToast({ title: '已设定', icon: 'success' });
 			},
-			loadLocalQuickTemplates() {
-				let storageKey = 'local_quick_remark_templates_' + this.uid;
-				let localData = uni.getStorageSync(storageKey);
-				if (localData && Array.isArray(localData)) {
-					this.quickTemplates = localData;
-				} else {
-					this.quickTemplates = [
-						'本报价单含运费及税金，有效期为15天。',
-						'定制规格产品非质量问题概不退换。',
-						'货到现场后请当面清点验收，如有异议请于3日内提出。'
-					];
-					this.saveLocalQuickTemplates();
-				}
-			},
-			saveLocalQuickTemplates() {
-				let storageKey = 'local_quick_remark_templates_' + this.uid;
-				uni.setStorageSync(storageKey, this.quickTemplates);
+			// type: 1=报价单位 2=询价单位 3=备注模板，三者存在同一张后端表 report_quick_list 里
+			loadQuickTemplates() {
+				let that = this;
+				that.$api.reportQuickList({ uid: that.uid, type: 3 }).then(res => {
+					that.quickTemplates = res.data || [];
+				}).catch(err => { console.log(err); });
 			},
 			openQuickTemplateModal() {
 				this.newQuickText = '';
@@ -642,20 +644,28 @@
 					uni.showToast({ title: '请输入有效的文案内容', icon: 'none' });
 					return;
 				}
-				this.quickTemplates.push(this.newQuickText.trim());
-				this.saveLocalQuickTemplates();
-				this.newQuickText = '';
-				uni.showToast({ title: '添加成功', icon: 'success' });
+				let that = this;
+				that.$api.reportQuickAdd({ uid: that.uid, type: 3, content: that.newQuickText.trim() }).then(() => {
+					that.newQuickText = '';
+					that.loadQuickTemplates();
+					uni.showToast({ title: '添加成功', icon: 'success' });
+				}).catch(err => {
+					uni.showToast({ title: (err && err.msg) || '添加失败', icon: 'none' });
+				});
 			},
-			deleteQuickTemplateItem(index) {
+			deleteQuickTemplateItem(id) {
+				let that = this;
 				uni.showModal({
 					title: '提示',
 					content: '确定要删除这条快捷模板吗？',
 					success: (res) => {
 						if (res.confirm) {
-							this.quickTemplates.splice(index, 1);
-							this.saveLocalQuickTemplates();
-							uni.showToast({ title: '已删除', icon: 'success' });
+							that.$api.reportQuickDel({ uid: that.uid, id }).then(() => {
+								that.loadQuickTemplates();
+								uni.showToast({ title: '已删除', icon: 'success' });
+							}).catch(err => {
+								uni.showToast({ title: (err && err.msg) || '删除失败', icon: 'none' });
+							});
 						}
 					}
 				});
@@ -670,24 +680,18 @@
 				this.closeQuickTemplateModal();
 				uni.showToast({ title: '已成功选用模板', icon: 'success' });
 			},
-			loadLocalRepComps() {
-				let storageKey = 'local_rep_comp_list_' + this.uid;
-				let localData = uni.getStorageSync(storageKey);
-				if (localData && Array.isArray(localData)) {
-					this.repCompList = localData;
-				} else {
-					this.repCompList = [
-						'某某电缆销售有限公司',
-						'某某线缆集团股份有限公司'
-					];
-					this.saveLocalRepComps();
-				}
+			// type: 1=报价单位 2=询价单位，分别加载各自独立的常用单位库
+			loadRepCompList(type) {
+				let that = this;
+				that.$api.reportQuickList({ uid: that.uid, type }).then(res => {
+					if (type === 2) {
+						that.repCompListQuestion = res.data || [];
+					} else {
+						that.repCompListRep = res.data || [];
+					}
+				}).catch(err => { console.log(err); });
 			},
-			saveLocalRepComps() {
-				let storageKey = 'local_rep_comp_list_' + this.uid;
-				uni.setStorageSync(storageKey, this.repCompList);
-			},
-			// 修复：支持接收 target 参数，区分是为“报价单位(rep)”还是“询价单位(question)”打开单位库
+			// 支持接收 target 参数，区分是为“报价单位(rep)”还是“询价单位(question)”打开单位库
 			openRepCompModal(target = 'rep') {
 				this.repCompTarget = target;
 				this.newRepCompText = '';
@@ -701,25 +705,35 @@
 					uni.showToast({ title: '请输入有效的公司名称', icon: 'none' });
 					return;
 				}
-				this.repCompList.push(this.newRepCompText.trim());
-				this.saveLocalRepComps();
-				this.newRepCompText = '';
-				uni.showToast({ title: '添加成功', icon: 'success' });
+				let that = this;
+				let type = that.repCompTarget === 'question' ? 2 : 1;
+				that.$api.reportQuickAdd({ uid: that.uid, type, content: that.newRepCompText.trim() }).then(() => {
+					that.newRepCompText = '';
+					that.loadRepCompList(type);
+					uni.showToast({ title: '添加成功', icon: 'success' });
+				}).catch(err => {
+					uni.showToast({ title: (err && err.msg) || '添加失败', icon: 'none' });
+				});
 			},
-			deleteRepCompItem(index) {
+			deleteRepCompItem(id) {
+				let that = this;
+				let type = that.repCompTarget === 'question' ? 2 : 1;
 				uni.showModal({
 					title: '提示',
 					content: '确定要删除这个常用单位吗？',
 					success: (res) => {
 						if (res.confirm) {
-							this.repCompList.splice(index, 1);
-							this.saveLocalRepComps();
-							uni.showToast({ title: '已删除', icon: 'success' });
+							that.$api.reportQuickDel({ uid: that.uid, id }).then(() => {
+								that.loadRepCompList(type);
+								uni.showToast({ title: '已删除', icon: 'success' });
+							}).catch(err => {
+								uni.showToast({ title: (err && err.msg) || '删除失败', icon: 'none' });
+							});
 						}
 					}
 				});
 			},
-			// 修复：根据 repCompTarget 精准回填对应字段，互不干扰
+			// 根据 repCompTarget 精准回填对应字段，互不干扰
 			applyRepComp(compName) {
 				if (this.repCompTarget === 'question') {
 					this.question_comp = compName;
@@ -1410,6 +1424,30 @@
 					.attr-val {
 						flex: 1;
 					}
+				}
+			}
+
+			.item-remark-row {
+				display: flex;
+				align-items: center;
+				font-size: 24rpx;
+				width: 100%;
+				margin-top: 10rpx;
+				padding: 12rpx 16rpx;
+				background: #fffbeb;
+				border: 1rpx solid #fde68a;
+				border-radius: 12rpx;
+				box-sizing: border-box;
+
+				.attr-label {
+					color: #92400e;
+					font-weight: 600;
+					flex-shrink: 0;
+				}
+
+				.remark-text-styled {
+					flex: 1;
+					color: #78350f;
 				}
 			}
 

@@ -243,6 +243,9 @@ class Ht{
 	userDel(data){
 		return http.post("Users/userDel",data)
 	}
+	userDelPrecheck(data){
+		return http.post("Users/userDelPrecheck",data)
+	}
 	
 	
 	regionAll(data){
@@ -266,6 +269,25 @@ class Ht{
     	}
     	getAiQuoteList(data){
     		return http.post("Ai/getQuoteList", data)
+    	}
+
+    // --- 意见反馈 ---
+    	feedbackAdd(data){
+    		return http.post("Users/feedbackAdd", data)
+    	}
+    	feedbackList(data){
+    		return http.post("Users/feedbackList", data)
+    	}
+
+    // --- 报价单：常用单位/备注模板 ---
+    	reportQuickList(data){
+    		return http.post("ReportNew/quickList", data)
+    	}
+    	reportQuickAdd(data){
+    		return http.post("ReportNew/quickAdd", data)
+    	}
+    	reportQuickDel(data){
+    		return http.post("ReportNew/quickDel", data)
     	}
 }
 export default new Ht()

@@ -4,8 +4,8 @@
 		<view class="status_header_card">
 			<view class="status_icon">📦</view>
 			<view class="status_info">
-				<text class="status_name">{{ getStatusText(info.status, info.paymode, info.ticket) }}</text>
-				<text class="status_desc">{{ getStatusDesc(info.status, info.paymode, info.ticket) }}</text>
+				<text class="status_name">{{ getStatusText(info.status, info.paymode, info.ticket, info.audit_status) }}</text>
+				<text class="status_desc">{{ getStatusDesc(info.status, info.paymode, info.ticket, info.audit_status) }}</text>
 			</view>
 		</view>
 
@@ -388,7 +388,20 @@
 						</view>
 					</view>
 				</view>
-				<!-- 已上传 -->
+				<!-- 已上传：凭证审核中 -->
+				<view class="audit_status_box audit_pending" v-if="base64s > 0 && info.audit_status == 0">
+					<text class="audit_icon">⏳</text>
+					<text class="audit_text">凭证审核中，请耐心等待，审核结果将第一时间通知您</text>
+				</view>
+				<!-- 已上传：凭证审核未通过 -->
+				<view class="audit_status_box audit_rejected" v-if="base64s > 0 && info.audit_status == 2">
+					<text class="audit_icon">⚠️</text>
+					<view class="audit_text_group">
+						<text class="audit_text">审核未通过：{{ info.audit_remark || '请联系客服核实转账信息' }}</text>
+						<text class="audit_contact_btn" @tap="contactService">联系客服处理</text>
+					</view>
+				</view>
+				<!-- 已上传：凭证图片 -->
 				<view class="order_trans_info2" v-if="base64s > 0" @tap="photoviewer">
 					<image mode="aspectFill" :src="base64Image" />
 					<view class="preview_tip_mask">点击查看大图</view>
@@ -413,13 +426,13 @@
 		
 		<view style="width: 750rpx;height: 140rpx;"></view>
 		
-		<!-- 8. 底部操作栏 -->
-		<view class="footers" v-if="info.paymode=='3' && info.status=='0'">
+		<!-- 8. 底部操作栏（待付款首次提交 / 审核驳回后重新提交） -->
+		<view class="footers" v-if="info.paymode=='3' && (info.status=='0' || (info.status=='1' && info.audit_status==2))">
 			<view class="footer_btn_left" @tap.stop="openFileDir('WRITE_EXTERNAL_STORAGE')">
 				<text class="foot_icon">📁</text>选择转账凭证
 			</view>
 			<view class="submit-btn" @tap.stop="applyTrans()">
-				<text class="foot_icon">🚀</text>提交转账凭证
+				<text class="foot_icon">🚀</text>{{ info.status=='1' ? '重新提交凭证' : '提交转账凭证' }}
 			</view>
 		</view>
 
@@ -669,7 +682,7 @@
 				return '#666666';
 			},
 			// 顶部状态提示标题
-			getStatusText(status, paymode, ticket) {
+			getStatusText(status, paymode, ticket, auditStatus) {
 				if (status == '0') {
 					if (paymode == '3' && ticket > 0) {
 						return '等待银行公对公转账与财务审核状态';
@@ -687,13 +700,17 @@
 						return '订单已提交，等待在线支付';
 					}
 				}
-				if (status == '1') return '仓库正在备货中';
+				if (status == '1') {
+					if (paymode == '3' && auditStatus == 0) return '转账凭证审核中';
+					if (paymode == '3' && auditStatus == 2) return '转账凭证审核未通过';
+					return '仓库正在备货中';
+				}
 				if (status == '2') return '商品已发出，运输中';
 				if (status == '3' || status == '4') return '订单已完成';
 				return '订单处理中';
 			},
 			// 顶部状态提示描述
-			getStatusDesc(status, paymode, ticket) {
+			getStatusDesc(status, paymode, ticket, auditStatus) {
 				if (status == '0') {
 					if (paymode == '3' && ticket > 0) {
 						return '请按订单提示核对开票及汇款信息完成银行转账，汇款后请及时上传付款凭证，经平台核定无误后将为您安排发货并开具发票。';
@@ -711,13 +728,20 @@
 						return '请在规定时间内完成在线支付，超时订单将自动关闭';
 					}
 				}
-				if (status == '1') return '商家正在为您清点打包商品';
+				if (status == '1') {
+					if (paymode == '3' && auditStatus == 0) return '您的转账凭证已提交，财务正在核对中，请耐心等待，审核通过后将立即为您安排发货。';
+					if (paymode == '3' && auditStatus == 2) return '很抱歉，您的转账凭证未通过审核，请查看下方驳回原因，重新提交凭证或联系客服处理。';
+					return '商家正在为您清点打包商品';
+				}
 				if (status == '2') return '请注意查收您的货物';
 				if (status == '3' || status == '4') return '感谢您的支持，期待再次光临';
 				return '如有疑问请联系客服';
 			},
 			changebankID(id) {
 				this.paybank = id;
+			},
+			contactService() {
+				uni.navigateTo({ url: '/pages/my/setindex/setcuetom' });
 			},
 			photoviewer() {
 				if (!this.base64Image) {
@@ -1485,6 +1509,53 @@
 		white-space: nowrap;
 	}
 	
+	.audit_status_box {
+		display: flex;
+		align-items: center;
+		border-radius: 12rpx;
+		padding: 20rpx 16rpx;
+		margin-bottom: 16rpx;
+	}
+	.audit_status_box.audit_pending {
+		background: #FFF7E6;
+		border: 1.5rpx solid #FFD591;
+	}
+	.audit_status_box.audit_rejected {
+		background: #FFF1F0;
+		border: 1.5rpx solid #FFA39E;
+	}
+	.audit_icon {
+		font-size: 36rpx;
+		margin-right: 16rpx;
+		flex-shrink: 0;
+	}
+	.audit_text_group {
+		display: flex;
+		flex-direction: column;
+		flex: 1;
+	}
+	.audit_status_box .audit_text {
+		font-size: 24rpx;
+		color: #874D00;
+		line-height: 1.5;
+	}
+	.audit_status_box.audit_rejected .audit_text {
+		color: #A8071A;
+	}
+	.audit_contact_btn {
+		margin-top: 10rpx;
+		align-self: flex-start;
+		font-size: 22rpx;
+		color: #ffffff;
+		background: #FF4D4F;
+		padding: 6rpx 20rpx;
+		border-radius: 24rpx;
+		font-weight: 500;
+	}
+	.audit_contact_btn:active {
+		opacity: 0.85;
+	}
+
 	.order_trans_info2 {
 		position: relative;
 		width: 100%;
