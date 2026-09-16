@@ -1,33 +1,38 @@
 <template>
 	<view class="page">
-		<!-- 广告内容区：只有当资源加载完成准备好时才显示，之前保持干净的背景，绝不出现丑陋的转圈 -->
-		<div class="loadheight fade-in-container" v-if="resourceLoaded">
-			
+		<!-- 广告内容区：媒体元素本身必须一直渲染在这里才能触发它自己的加载事件，
+		     不能像之前那样整个容器都用 resourceLoaded 控制 v-if——那样视频/图片标签
+		     永远不会被创建，@loadedmetadata / @load 永远不会触发，resourceLoaded 就
+		     永远变不成 true，是个死循环。改成用 resourceLoaded 只控制淡入动画和
+		     跳过/声音按钮的显示，媒体元素只要拿到 info.url 就立刻渲染开始加载 -->
+		<div class="loadheight" :class="{'fade-in-container': resourceLoaded}" v-if="info.url">
+
 			<!-- 情况 A：后台配置的是【视频】 -->
-			<block v-if="info.type === 'video' && info.url">
-				<video 
+			<block v-if="info.type === 'video'">
+				<video
 					class="full-video"
 					:src="singleLineVideoUrl"
 					:autoplay="true"
-					:muted="isMuted" 
+					:muted="isMuted"
 					:controls="false"
 					:loop="false"
 					object-fit="cover"
 					@loadedmetadata="onVideoLoaded"
+					@error="onVideoError"
 					@ended="doJump">
 				</video>
 
-				<!-- 声音开关控制按钮 -->
-				<div class="sound-btn" @click="toggleSound">
+				<!-- 声音开关控制按钮：资源没准备好之前先不展示，避免闪现在黑屏上 -->
+				<div class="sound-btn" @click="toggleSound" v-if="resourceLoaded">
 					<text>{{ isMuted ? '🔇 点击开启声音' : '🔊 声音已开启' }}</text>
 				</div>
 			</block>
 
 			<!-- 情况 B：后台配置的是【图片】 -->
-			<block v-else-if="info.type === 'image' && info.url">
-				<image 
-					:src="singleLineBase64" 
-					mode="aspectFill" 
+			<block v-else-if="info.type === 'image'">
+				<image
+					:src="singleLineBase64"
+					mode="aspectFill"
 					class="full-image"
 					@load="onImageLoaded"
 					@error="onImageError">
@@ -35,7 +40,7 @@
 			</block>
 
 			<!-- 右上角统一的跳过按钮 -->
-			<div class="jump" @click="doJump()">({{initNumb}})跳过</div>
+			<div class="jump" @click="doJump()" v-if="resourceLoaded">({{initNumb}})跳过</div>
 		</div>
 	</view>
 </template>
@@ -93,6 +98,11 @@
 				let duration = Math.ceil(e.detail.duration || 5);
 				this.initNumb = duration;
 				this.startCountdown(duration);
+			},
+
+			onVideoError() {
+				// 视频加载失败（网络/编码问题等）：不能让用户卡在黑屏上，直接跳过
+				this.doJump();
 			},
 
 			onImageLoaded() {
@@ -153,6 +163,7 @@
 		overflow: hidden;
 		position: relative;
 		text-align: center;
+		opacity: 0; /* 资源没准备好之前先隐藏，但元素本身要一直存在于 DOM 里才能触发加载事件 */
 	}
 
 	/* 优雅的淡入渐变，绝不生硬 */

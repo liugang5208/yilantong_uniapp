@@ -56,18 +56,51 @@
 
 						<view class="combined-row-half">
 							<view class="half-param-item">
-								<text class="box-label">电压等级：</text>
+								<text class="box-label">{{ item.key_5 || '电压等级' }}：</text>
 								<text class="box-val custom-blue-text">{{ cleanField(item.attr1, 'voltage') }}</text>
 							</view>
 							<view class="half-param-item">
-								<text class="box-label">产品型号：</text>
+								<text class="box-label">{{ item.key_6 || '产品型号' }}：</text>
 								<text class="box-val custom-blue-text">{{ cleanField(item.model || item.attr2, 'model') }}</text>
 							</view>
 						</view>
 
-						<view class="param-box-item spec-box-item">
-							<text class="box-label">产品规格：</text>
-							<text class="box-val custom-blue-text">{{ cleanField(item.attr3 || item.spec, 'spec') }}</text>
+						<!-- 产品规格跟质量标准合并到同一行，避免产品规格单独占一整行、后面留一大块空白 -->
+						<view class="combined-row-half">
+							<view class="half-param-item">
+								<text class="box-label">{{ item.key_7 || '产品规格' }}：</text>
+								<text class="box-val custom-blue-text">{{ cleanField(item.attr3 || item.spec, 'spec') }}</text>
+							</view>
+							<view class="half-param-item">
+								<text class="box-label">{{ item.key_1 || '质量标准' }}：</text>
+								<text class="box-val custom-blue-text">{{ item.value_1 || '暂无' }}</text>
+							</view>
+						</view>
+
+						<!-- 跟"商品基础信息"卡片统一读取 key_N/value_N -->
+						<view class="combined-row-half">
+							<view class="half-param-item">
+								<text class="box-label">{{ item.key_2 || '执行标准' }}：</text>
+								<text class="box-val custom-blue-text">{{ item.value_2 || '暂无' }}</text>
+							</view>
+							<view class="half-param-item">
+								<text class="box-label">{{ item.key_4 || '计量单位' }}：</text>
+								<text class="box-val custom-blue-text">{{ item.value_4 || '暂无' }}</text>
+							</view>
+						</view>
+						<view class="combined-row-half">
+							<view class="half-param-item">
+								<text class="box-label">{{ item.key_0 || '供应方式' }}：</text>
+								<text class="box-val custom-blue-text">{{ item.value_0 || '暂无' }}</text>
+							</view>
+							<view class="half-param-item">
+								<text class="box-label">{{ item.key_3 || '起订数量' }}：</text>
+								<text class="box-val custom-blue-text">{{ item.value_3 || 500 }}</text>
+							</view>
+						</view>
+						<view class="param-box-item">
+							<text class="box-label">{{ item.key_8 || '交货周期' }}：</text>
+							<text class="box-val custom-blue-text">{{ item.value_8 || '暂无' }}</text>
 						</view>
 					</view>
 

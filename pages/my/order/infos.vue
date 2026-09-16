@@ -256,25 +256,45 @@
 							<!-- 2. 双列规格格栅（草图精准对齐版：产品型号、电压等级、产品规格、质量标准、购买数量、发票税率、执行单价、单品小计） -->
 							<div class="spec-grid-box-double">
 								<!-- 左列：产品型号 -->
-								<div class="spec-grid-item" v-if="x.attr2">
-									<text class="s-k">产品型号：</text>
-									<text class="s-v font-blue" v-html="x.attr2.replace(/^[^：:]*[：:]/, '')"></text>
+								<div class="spec-grid-item">
+									<text class="s-k">{{x.key_6 || '产品型号'}}：</text>
+									<text class="s-v font-blue">{{x.value_6}}</text>
 								</div>
-								<!-- 右列：电压等级 -->
-								<div class="spec-grid-item" v-if="x.attr1">
-									<text class="s-k">电压等级：</text>
-									<text class="s-v font-blue" v-html="x.attr1.replace(/^[^：:]*[：:]/, '')"></text>
+								<div class="spec-grid-item">
+									<text class="s-k">{{x.key_5 || '电压等级'}}：</text>
+									<text class="s-v font-blue">{{x.value_5}}</text>
 								</div>
 
-								<!-- 左列：产品规格 -->
-								<div class="spec-grid-item" v-if="x.attr3">
-									<text class="s-k">产品规格：</text>
-									<text class="s-v font-blue" v-html="x.attr3.replace(/^[^：:]*[：:]/, '')"></text>
-								</div>
-								<!-- 右列：质量标准（若无则展示默认国标保检或自定义字段） -->
 								<div class="spec-grid-item">
-									<text class="s-k">质量标准：</text>
-									<text class="s-v font-blue">{{ x.quality || '国标保检' }}</text>
+									<text class="s-k">{{x.key_7 || '产品规格'}}：</text>
+									<text class="s-v font-blue">{{x.value_7}}</text>
+								</div>
+								<div class="spec-grid-item">
+									<text class="s-k">{{x.key_1 || '质量标准'}}：</text>
+									<text class="s-v font-blue">{{x.value_1}}</text>
+								</div>
+
+								<div class="spec-grid-item">
+									<text class="s-k">{{x.key_2 || '执行标准'}}：</text>
+									<text class="s-v font-blue">{{x.value_2}}</text>
+								</div>
+								<div class="spec-grid-item">
+									<text class="s-k">{{x.key_4 || '计量单位'}}：</text>
+									<text class="s-v font-blue">{{x.value_4}}</text>
+								</div>
+
+								<div class="spec-grid-item">
+									<text class="s-k">{{x.key_0 || '供应方式'}}：</text>
+									<text class="s-v font-blue">{{x.value_0}}</text>
+								</div>
+								<div class="spec-grid-item">
+									<text class="s-k">{{x.key_3 || '起订数量'}}：</text>
+									<text class="s-v font-blue">{{x.value_3 || 500}}</text>
+								</div>
+
+								<div class="spec-grid-item full-width-cell">
+									<text class="s-k">{{x.key_8 || '交货周期'}}：</text>
+									<text class="s-v font-blue">{{x.value_8}}</text>
 								</div>
 
 								<!-- 左列：购买数量 -->

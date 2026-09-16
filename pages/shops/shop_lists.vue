@@ -217,7 +217,7 @@
 						<text class="s-label">{{keys ? keys.key_1 : '质量标准'}}：</text>
 						<view class="s-val-outer">
 							<view class="s-val-marquee">
-								<text class="s-val text-content-red">国标保检</text>
+								<text class="s-val text-content-red">{{cdata.value_1}}</text>
 							</view>
 						</view>
 					</view>
@@ -247,12 +247,12 @@
 						<text class="s-label">{{keys ? keys.key_4 : '计量单位'}}：</text>
 						<view class="s-val-outer">
 							<view class="s-val-marquee">
-								<text class="s-val text-content-blue">米</text>
+								<text class="s-val text-content-blue">{{cdata.value_4 || '米'}}</text>
 							</view>
 						</view>
 					</view>
 					<view class="spec-item">
-						<text class="s-label">起订数量：</text>
+						<text class="s-label">{{keys ? keys.key_3 : '起订数量'}}：</text>
 						<view class="s-val-outer">
 							<view class="s-val-marquee">
 								<text class="s-val text-content-blue">{{minNums}}</text>
@@ -280,25 +280,25 @@
 						<text class="s-label">{{keys ? keys.key_0 : '供应方式'}}：</text>
 						<view class="s-val-outer">
 							<view class="s-val-marquee">
-								<text class="s-val text-content-blue">现货供应</text>
+								<text class="s-val text-content-blue">{{cdata.value_0 || '现货供应'}}</text>
 							</view>
 						</view>
 					</view>
 					<view class="spec-item">
-					    <text class="s-label" style="display: inline-block;">交货周期：</text>
+					    <text class="s-label" style="display: inline-block;">{{keys ? keys.key_8 : '交货周期'}}：</text>
 					    <view class="s-val-outer">
-					        <view class="s-val-marquee" :class="{'marquee-running': isTextOverflow(cdata.trans || '24小时内发货', 10)}">
-					            <text class="s-val text-content-blue">{{cdata.trans || '24小时内发货'}}</text>
-					            <text class="s-val text-content-blue duplicate-text" v-if="isTextOverflow(cdata.trans || '24小时内发货', 10)">{{cdata.trans || '24小时内发货'}}</text>
+					        <view class="s-val-marquee" :class="{'marquee-running': isTextOverflow(cdata.value_8 || '24小时内发货', 10)}">
+					            <text class="s-val text-content-blue">{{cdata.value_8 || '24小时内发货'}}</text>
+					            <text class="s-val text-content-blue duplicate-text" v-if="isTextOverflow(cdata.value_8 || '24小时内发货', 10)">{{cdata.value_8 || '24小时内发货'}}</text>
 					        </view>
 					    </view>
 					</view>
 					<view class="spec-item-full spec-item-name-row">
-						<text class="s-label">执行标准：</text>
+						<text class="s-label">{{keys ? keys.key_2 : '执行标准'}}：</text>
 						<view class="s-val-outer">
-							<view class="s-val-marquee" :class="{'marquee-running': isTextOverflow(getActiveStandardName(), 20)}">
-								<text class="s-val text-content-blue">{{ getActiveStandardName() }}</text>
-								<text class="s-val text-content-blue duplicate-text" v-if="isTextOverflow(getActiveStandardName(), 20)">{{ getActiveStandardName() }}</text>
+							<view class="s-val-marquee" :class="{'marquee-running': isTextOverflow(cdata.value_2, 20)}">
+								<text class="s-val text-content-blue">{{ cdata.value_2 }}</text>
+								<text class="s-val text-content-blue duplicate-text" v-if="isTextOverflow(cdata.value_2, 20)">{{ cdata.value_2 }}</text>
 							</view>
 						</view>
 					</view>
@@ -1022,9 +1022,9 @@
 				that.cdata = data;
 				that.cprice = that.transpoint(data.market * that.ticket * (that.ulevel ? that.ulevel.up : 1));
 				
-				let fetchedMin = (that.blank_info && (that.blank_info.min_nums || that.blank_info.start_nums)) 
-					? Number(that.blank_info.min_nums || that.blank_info.start_nums) 
-					: (data.min_nums ? Number(data.min_nums) : 500);
+				// 起订数量来自"商品设置"的 key_3/value_3（比如 782/阻燃C级 存的是 起订数量/500），
+				// 之前读的 blank_info.min_nums / data.min_nums 这些字段库里根本不存在，一直在吃兜底值 500
+				let fetchedMin = data.value_3 ? Number(data.value_3) : 500;
 				that.minNums = !isNaN(fetchedMin) && fetchedMin > 0 ? fetchedMin : 500;
 				
 				that.nums = that.minNums;

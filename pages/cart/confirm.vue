@@ -74,24 +74,51 @@
 											</view>
 										</view>
 									</view>
+									<!-- 跟"商品基础信息"卡片统一读取 key_N/value_N -->
 									<view class="cs-row">
 										<view class	="cs-cell half-cell">
-											<text class="cs-label">{{x.list.key_1 || '产品型号'}}</text>
-											<view class="cs-value-box"><text class="val-txt blue ellipsis-single">{{x.list.value_1}}</text></view>
+											<text class="cs-label">{{x.list.key_6 || '产品型号'}}</text>
+											<view class="cs-value-box"><text class="val-txt blue ellipsis-single">{{x.list.value_6}}</text></view>
 										</view>
 											<view class="cs-cell half-cell">
-												<text class="cs-label">{{x.list.key_0 || '电压等级'}}</text>
-												<view class="cs-value-box"><text class="val-txt blue ellipsis-single">{{x.list.value_0}}</text></view>
+												<text class="cs-label">{{x.list.key_5 || '电压等级'}}</text>
+												<view class="cs-value-box"><text class="val-txt blue ellipsis-single">{{x.list.value_5}}</text></view>
 											</view>
 									</view>
 									<view class="cs-row">
 										<view class="cs-cell half-cell">
-											<text class="cs-label">产品规格</text>
+											<text class="cs-label">{{x.list.key_7 || '产品规格'}}</text>
+											<view class="cs-value-box"><text class="val-txt blue ellipsis-single">{{x.list.value_7}}</text></view>
+										</view>
+										<view class="cs-cell half-cell">
+											<text class="cs-label">{{x.list.key_1 || '质量标准'}}</text>
+											<view class="cs-value-box"><text class="val-txt blue ellipsis-single">{{x.list.value_1}}</text></view>
+										</view>
+									</view>
+									<view class="cs-row">
+										<view class="cs-cell half-cell">
+											<text class="cs-label">{{x.list.key_2 || '执行标准'}}</text>
 											<view class="cs-value-box"><text class="val-txt blue ellipsis-single">{{x.list.value_2}}</text></view>
 										</view>
 										<view class="cs-cell half-cell">
-											<text class="cs-label">质量标准</text>
-											<view class="cs-value-box"><text class="val-txt blue ellipsis-single">{{x.list.quality || '国标保检'}}</text></view>
+											<text class="cs-label">{{x.list.key_4 || '计量单位'}}</text>
+											<view class="cs-value-box"><text class="val-txt blue ellipsis-single">{{x.list.value_4}}</text></view>
+										</view>
+									</view>
+									<view class="cs-row">
+										<view class="cs-cell half-cell">
+											<text class="cs-label">{{x.list.key_0 || '供应方式'}}</text>
+											<view class="cs-value-box"><text class="val-txt blue ellipsis-single">{{x.list.value_0}}</text></view>
+										</view>
+										<view class="cs-cell half-cell">
+											<text class="cs-label">{{x.list.key_3 || '起订数量'}}</text>
+											<view class="cs-value-box"><text class="val-txt blue ellipsis-single">{{x.list.value_3 || 500}}</text></view>
+										</view>
+									</view>
+									<view class="cs-row">
+										<view class="cs-cell full-width-cell">
+											<text class="cs-label">{{x.list.key_8 || '交货周期'}}</text>
+											<view class="cs-value-box"><text class="val-txt blue ellipsis-single">{{x.list.value_8}}</text></view>
 										</view>
 									</view>
 									<view class="cs-row">

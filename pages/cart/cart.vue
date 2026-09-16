@@ -66,31 +66,43 @@
 								<text class="s-v font-dark">{{x.list.gnames}}</text>
 							</div>
 							
-							<!-- 2. 双列规格格栅（严格对应草图左右位置：左边产品型号/右边电压等级 等） -->
+							<!-- 2. 双列规格格栅：跟"商品基础信息"卡片统一读取 key_N/value_N -->
 							<div class="spec-grid-box-double">
 								<div class="spec-grid-item">
-									<text class="s-k">{{x.list.key_1 || '电压等级'}}：</text>
+									<text class="s-k">{{x.list.key_6 || '产品型号'}}：</text>
+									<text class="s-v font-blue">{{x.list.value_6}}</text>
+								</div>
+								<div class="spec-grid-item">
+									<text class="s-k">{{x.list.key_5 || '电压等级'}}：</text>
+									<text class="s-v font-blue">{{x.list.value_5}}</text>
+								</div>
+								<div class="spec-grid-item">
+									<text class="s-k">{{x.list.key_7 || '产品规格'}}：</text>
+									<text class="s-v font-blue">{{x.list.value_7}}</text>
+								</div>
+								<div class="spec-grid-item">
+									<text class="s-k">{{x.list.key_1 || '质量标准'}}：</text>
 									<text class="s-v font-blue">{{x.list.value_1}}</text>
 								</div>
 								<div class="spec-grid-item">
-									<text class="s-k">{{x.list.key_0 || '产品型号'}}：</text>
-									<text class="s-v font-blue">{{x.list.value_0}}</text>
-								</div>
-								<div class="spec-grid-item">
-									<text class="s-k">{{x.list.key_2 || '产品规格'}}：</text>
+									<text class="s-k">{{x.list.key_2 || '执行标准'}}：</text>
 									<text class="s-v font-blue">{{x.list.value_2}}</text>
 								</div>
 								<div class="spec-grid-item">
-									<text class="s-k">质量标准：</text>
-									<text class="s-v font-blue">{{ x.standard || x.list.standard || x.standard_name || x.bz_name || x.bz || x.product_standard || '国标保检' }}</text>
+									<text class="s-k">{{x.list.key_4 || '计量单位'}}：</text>
+									<text class="s-v font-blue">{{x.list.value_4}}</text>
 								</div>
 								<div class="spec-grid-item">
-									<text class="s-k">计量单位：</text>
-									<text class="s-v font-blue">{{x.info.g_unit}}</text>
+									<text class="s-k">{{x.list.key_0 || '供应方式'}}：</text>
+									<text class="s-v font-blue">{{x.list.value_0}}</text>
 								</div>
 								<div class="spec-grid-item">
-								    <text class="s-k">起订数量：</text>
-								    <text class="s-v font-blue">{{x.minNum || 500}}</text>
+								    <text class="s-k">{{x.list.key_3 || '起订数量'}}：</text>
+								    <text class="s-v font-blue">{{x.list.value_3 || 500}}</text>
+								</div>
+								<div class="spec-grid-item">
+								    <text class="s-k">{{x.list.key_8 || '交货周期'}}：</text>
+								    <text class="s-v font-blue">{{x.list.value_8}}</text>
 								</div>
 
 								<!-- 4. 执行单价与小计金额：严格作为表格中的最后两格，单品小计精确后两位显示 -->
@@ -361,7 +373,9 @@
 				}).catch(() => { uni.hideLoading(); });
 			},
 			handleStepMinus(x) {
-				let limitMin = parseInt(x.minNum || 1);
+				// 起订数量读商品设置的 value_3（跟"商品基础信息"卡片同一个来源），
+				// x.minNum 这个字段从来没被赋值过，之前一直在用兜底的 1 当起订量
+				let limitMin = parseInt((x.list && x.list.value_3) || 500);
 				let newVal = parseInt(x.nums) - 1;
 				if (newVal < limitMin) {
 					uni.showToast({ title: `购买数量必须达到起订量（${limitMin}）`, icon: 'none', duration: 2000 });
@@ -377,7 +391,7 @@
 			},
 			onInputBlur(x) {
 				let val = parseInt(x.nums);
-				let limitMin = parseInt(x.minNum || 1);
+				let limitMin = parseInt((x.list && x.list.value_3) || 500);
 				if (isNaN(val) || val < limitMin) {
 					val = limitMin;
 					uni.showToast({ title: `购买数量必须达到起订量（${limitMin}）`, icon: 'none', duration: 2000 });

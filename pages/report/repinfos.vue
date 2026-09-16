@@ -73,17 +73,50 @@
 				<view class="card-attr-grid">
 					<view class="attr-row-flex">
 						<view class="attr-col-item" @click="openDetailModalConditionally('产品型号全称', item.attr2, $event)">
-							<text class="attr-label" style="margin-right: 6px;">产品型号：</text>
+							<text class="attr-label" style="margin-right: 6px;">{{ item.key_6 || '产品型号' }}：</text>
 							<text class="attr-val ellipsis-text text-blue-bright">{{ item.attr2 || '-' }}</text>
 						</view>
 						<view class="attr-col-item" @click="openDetailModalConditionally('电压等级全称', item.attr1, $event)">
-							<text class="attr-label">电压等级：</text>
+							<text class="attr-label">{{ item.key_5 || '电压等级' }}：</text>
 							<text class="attr-val ellipsis-text text-blue-bright">{{ item.attr1 || '-' }}</text>
 						</view>
 					</view>
-					<view class="attr-row-item-full" @click="openDetailModalConditionally('产品规格全称', item.attr3, $event)">
-						<text class="attr-label">产品规格：</text>
-						<text class="attr-val ellipsis-text text-blue-bright">{{ item.attr3 || '-' }}</text>
+					<!-- 产品规格跟质量标准合并到同一行，避免产品规格单独占一整行、后面留一大块空白 -->
+					<view class="attr-row-flex">
+						<view class="attr-col-item" @click="openDetailModalConditionally('产品规格全称', item.attr3, $event)">
+							<text class="attr-label" style="margin-right: 6px;">{{ item.key_7 || '产品规格' }}：</text>
+							<text class="attr-val ellipsis-text text-blue-bright">{{ item.attr3 || '-' }}</text>
+						</view>
+						<view class="attr-col-item">
+							<text class="attr-label">{{ item.key_1 || '质量标准' }}：</text>
+							<text class="attr-val ellipsis-text text-blue-bright">{{ item.value_1 || '-' }}</text>
+						</view>
+					</view>
+
+					<!-- 跟"商品基础信息"卡片统一读取 key_N/value_N -->
+					<view class="attr-row-flex">
+						<view class="attr-col-item">
+							<text class="attr-label" style="margin-right: 6px;">{{ item.key_2 || '执行标准' }}：</text>
+							<text class="attr-val ellipsis-text text-blue-bright">{{ item.value_2 || '-' }}</text>
+						</view>
+						<view class="attr-col-item">
+							<text class="attr-label">{{ item.key_4 || '计量单位' }}：</text>
+							<text class="attr-val ellipsis-text text-blue-bright">{{ item.value_4 || '-' }}</text>
+						</view>
+					</view>
+					<view class="attr-row-flex">
+						<view class="attr-col-item">
+							<text class="attr-label" style="margin-right: 6px;">{{ item.key_0 || '供应方式' }}：</text>
+							<text class="attr-val ellipsis-text text-blue-bright">{{ item.value_0 || '-' }}</text>
+						</view>
+						<view class="attr-col-item">
+							<text class="attr-label">{{ item.key_3 || '起订数量' }}：</text>
+							<text class="attr-val ellipsis-text text-blue-bright">{{ item.value_3 || 500 }}</text>
+						</view>
+					</view>
+					<view class="attr-row-item-full">
+						<text class="attr-label">{{ item.key_8 || '交货周期' }}：</text>
+						<text class="attr-val ellipsis-text text-blue-bright">{{ item.value_8 || '-' }}</text>
 					</view>
 				</view>
 
