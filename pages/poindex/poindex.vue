@@ -69,6 +69,11 @@
 					<u-input v-model="form.idCardOrLicence" input-align="right" :placeholder="form.accountType === 'enterprise' ? '请输入营业执照号（选填）' : '请输入身份证号（选填）'" />
 				</u-form-item>
 
+				<!-- 7.5 负责人姓名：仅企业单位需要 -->
+				<u-form-item v-if="form.accountType === 'enterprise'" label="负责人姓名" :border-bottom="true">
+					<u-input v-model="form.manager" input-align="right" placeholder="请输入负责人姓名（选填）" />
+				</u-form-item>
+
 				<!-- 8. 其他选填 -->
 				<u-form-item label="联系电话" :border-bottom="true">
 					<u-input v-model="form.contactPhone" input-align="right" placeholder="请输入其他联系电话（选填）" type="number" />
@@ -166,6 +171,7 @@
 					nickname: '',
 					street: '',
 					idCardOrLicence: '',
+					manager: '', // 企业：负责人姓名
 					contactPhone: '',
 					wechat: '',
 					email: '',
@@ -282,6 +288,7 @@
 					that.form.idCardOrLicence = that.form.accountType === 'personal'
 						? (data.idcard || '')
 						: (data.licence_no || '');
+					that.form.manager = data.manager || '';
 					that.form.contactPhone = data.maphone || '';
 					that.form.wechat = data.wechat || '';
 					that.form.email = data.email || '';
@@ -316,6 +323,7 @@
 					street: that.form.street,
 					accountType: that.form.accountType,
 					idCardOrLicence: that.form.idCardOrLicence,
+					manager: that.form.accountType === 'enterprise' ? that.form.manager : '',
 					contactPhone: that.form.contactPhone,
 					wechat: that.form.wechat,
 					email: that.form.email,

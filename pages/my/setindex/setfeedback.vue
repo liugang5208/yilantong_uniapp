@@ -30,9 +30,12 @@
 			<view class="history-item" v-for="(item, index) in list" :key="item.id">
 				<view class="history-header">
 					<text class="history-time">{{ formatTime(item.times) }}</text>
-					<text :class="['history-status', item.status > 0 ? 'status-replied' : 'status-pending']">
-						{{ item.status > 0 ? '已回复' : '待回复' }}
-					</text>
+					<view class="history-header-right">
+						<text :class="['history-status', item.status > 0 ? 'status-replied' : 'status-pending']">
+							{{ item.status > 0 ? '已回复' : '待回复' }}
+						</text>
+						<text class="history-delete" @click="deleteFeedback(item.id)">删除</text>
+					</view>
 				</view>
 				<view class="history-content">{{ item.context }}</view>
 				<view class="history-reply" v-if="item.status > 0 && item.reply">
@@ -123,6 +126,28 @@
 					console.log(err);
 					uni.showToast({ title: (err && err.msg) || '提交失败，请稍后重试', icon: 'none' });
 				});
+			},
+			deleteFeedback(id) {
+				let that = this;
+				uni.showModal({
+					title: '提示',
+					content: '确定要删除这条反馈记录吗？',
+					confirmColor: '#d93838',
+					success: (res) => {
+						if (res.confirm) {
+							uni.showLoading({ title: '处理中...' });
+							that.$api.feedbackDel({ id: id, uid: that.uid }).then(ret => {
+								uni.hideLoading();
+								uni.showToast({ title: '已删除', icon: 'none' });
+								that.loadFeedbackList();
+							}).catch(err => {
+								uni.hideLoading();
+								console.log(err);
+								uni.showToast({ title: (err && err.msg) || '删除失败，请稍后重试', icon: 'none' });
+							});
+						}
+					}
+				});
 			}
 		}
 	}
@@ -212,6 +237,11 @@
 						color: #999999;
 					}
 
+					.history-header-right {
+						display: flex;
+						align-items: center;
+					}
+
 					.history-status {
 						font-size: 22rpx;
 						padding: 4rpx 16rpx;
@@ -226,6 +256,13 @@
 					.status-replied {
 						background-color: #e8f9ee;
 						color: #34c759;
+					}
+
+					.history-delete {
+						font-size: 22rpx;
+						color: #999999;
+						margin-left: 16rpx;
+						padding: 4rpx 8rpx;
 					}
 				}
 

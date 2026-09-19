@@ -354,16 +354,18 @@
 				that.ticket_index = type;
 				this.$forceUpdate()
 				////
+				// 含税价改成"除法"倒挤（价税分离）算法：不含税价 ÷ (1 - 税率/100)，
+				// 不再用"乘法"简单加价（1 + 税率/100），后台配置的税率数值不用改
 				if (type == 0) {
 					that.ticket = 1;
 					that.ticket_color = "red";
 				}
 				if (type == 1) {
-					that.ticket = 1 + that.blank_info["ticket_nor"] / 100;
+					that.ticket = 1 / (1 - that.blank_info["ticket_nor"] / 100);
 					that.ticket_color = "blue";
 				}
 				if (type == 2) {
-					that.ticket = 1 + that.blank_info["ticket_person"] / 100;
+					that.ticket = 1 / (1 - that.blank_info["ticket_person"] / 100);
 					that.ticket_color = "blue";
 				}
 				//
@@ -381,8 +383,11 @@
 				that.act_index = id;
 			},
 			transpoint(value) {
-				//return Math.floor(value * 100) / 100;
-				return parseFloat(value).toFixed(2);
+				// 除法算出来的含税价容易落在 x.xx5 边界上，原生 toFixed() 受浮点数表示误差
+				// 影响可能舍入错误，这里加一个极小修正量保证第三位小数按"满五进一"正确处理
+				let num = parseFloat(value || 0);
+				let rounded = Math.round((num + (num >= 0 ? 1e-8 : -1e-8)) * 100) / 100;
+				return rounded.toFixed(2);
 			},
 			backNav() {
 				uni.navigateBack()

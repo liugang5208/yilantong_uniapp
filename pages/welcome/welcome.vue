@@ -68,15 +68,47 @@
 		methods: {
 			async init() {
 				try {
-					let res = await this.$api.load_banner()
+					let cacheMeta = this.loadCacheMeta();
+					let res = await this.$api.load_banner({ version: cacheMeta ? cacheMeta.version : '' });
+					let freshList = (res.data && res.data.list) || [];
 
-					// 没有配置/启用任何开屏广告时，不展示空白/异常界面，直接跳过进入首页
-					if (!res.data || !res.data.url) {
+					// 没有配置/启用任何开屏广告时，不展示空白/异常界面，直接跳过进入首页；
+					// 顺带清空本地缓存（全部广告都被下架/删除了）
+					if (freshList.length === 0) {
+						this.cleanupCache(cacheMeta ? cacheMeta.items : [], []);
+						this.saveCacheMeta({ version: res.data ? res.data.version : '', items: [] });
 						return this.doJump();
 					}
 
-					this.info.type = res.data.type === 'video' ? 'video' : 'image';
-					this.info.url = res.data.url;
+					let freshIds = freshList.map(a => String(a.id));
+					let oldItems = (cacheMeta && cacheMeta.items) || [];
+
+					// 按 id 比对：本地缓存里存在、但这次后台已经不返回的（已删除/已下架），
+					// 清理掉对应的本地缓存文件，不留孤儿文件
+					let keepItems = oldItems.filter(it => freshIds.includes(String(it.id)));
+					this.cleanupCache(oldItems, freshIds);
+
+					// 本次展示哪一条由客户端随机选，优先用已经缓存到本地的文件，
+					// 缓存里没有（新广告/首次启动）才现场下载
+					let keepMap = {};
+					keepItems.forEach(it => { keepMap[String(it.id)] = it; });
+					let pickAd = freshList[Math.floor(Math.random() * freshList.length)];
+					let pickItem = keepMap[String(pickAd.id)];
+					if (!pickItem || !pickItem.localPath) {
+						let saved = await this.downloadAndSave(pickAd);
+						pickItem = saved || { id: pickAd.id, type: pickAd.type, url: pickAd.url, localPath: '' };
+						keepMap[String(pickAd.id)] = pickItem;
+					}
+
+					// 立刻落盘一次（哪怕下面预缓存其它广告失败/较慢，这次的清理结果和选中项也不会丢）
+					let keepList = [];
+					for (let key in keepMap) {
+						keepList.push(keepMap[key]);
+					}
+					this.saveCacheMeta({ version: res.data.version, items: keepList });
+
+					this.info.type = pickItem.type;
+					this.info.url = pickItem.localPath || pickItem.url; // 有本地缓存文件优先用本地，否则回退到远程地址
 
 					if (this.info.type === 'video') {
 						this.singleLineVideoUrl = this.info.url.replace(/(\r\n|\n|\r)/gm, "");
@@ -86,11 +118,93 @@
 						this.resourceLoaded = true;
 						this.startCountdown(5);
 					}
+
+					// 后台预缓存这次没选中的其它广告，不阻塞本次展示，为下次启动做准备
+					freshList
+						.filter(a => String(a.id) !== String(pickAd.id) && !keepMap[String(a.id)])
+						.forEach(a => this.prefetchAd(a));
 				} catch (e) {
 					// 广告接口异常（网络失败等）：不能让用户卡在黑屏上，直接跳过
 					console.log(e);
 					this.doJump();
 				}
+			},
+
+			// ---- 本地缓存相关：把广告素材下载持久化到本地，减少重复下载，并按 id 清理失效缓存 ----
+
+			loadCacheMeta() {
+				try {
+					return uni.getStorageSync('ads_cache_meta_v1') || null;
+				} catch (e) {
+					return null;
+				}
+			},
+
+			saveCacheMeta(meta) {
+				try {
+					uni.setStorageSync('ads_cache_meta_v1', meta);
+				} catch (e) {
+					// 本地存储异常不影响本次展示，忽略
+				}
+			},
+
+			// 清理本地缓存里已经不在 freshIds 范围内的文件（对应后台已删除/已下架的广告）
+			cleanupCache(oldItems, freshIds) {
+				(oldItems || []).forEach(it => {
+					if (!freshIds.includes(String(it.id))) {
+						this.removeCachedFile(it);
+					}
+				});
+			},
+
+			removeCachedFile(item) {
+				if (item && item.localPath && typeof uni.removeSavedFile === 'function') {
+					uni.removeSavedFile({
+						filePath: item.localPath,
+						fail: () => {} // 文件本来就不存在/已被系统清理，忽略
+					});
+				}
+			},
+
+			// 下载并持久化保存一条广告素材，成功返回 {id,type,url,localPath}，
+			// 失败或平台不支持本地持久化（如 H5）返回 null，调用方会回退到远程 url
+			downloadAndSave(ad) {
+				return new Promise((resolve) => {
+					if (typeof uni.saveFile !== 'function') {
+						resolve(null);
+						return;
+					}
+					uni.downloadFile({
+						url: ad.url,
+						success: (res) => {
+							if (res.statusCode !== 200) {
+								resolve(null);
+								return;
+							}
+							uni.saveFile({
+								tempFilePath: res.tempFilePath,
+								success: (saveRes) => {
+									resolve({ id: ad.id, type: ad.type, url: ad.url, localPath: saveRes.savedFilePath });
+								},
+								fail: () => resolve(null)
+							});
+						},
+						fail: () => resolve(null)
+					});
+				});
+			},
+
+			// 后台预缓存：下载成功后追加进本地缓存清单，不影响本次展示
+			prefetchAd(ad) {
+				this.downloadAndSave(ad).then(saved => {
+					if (!saved) return;
+					let meta = this.loadCacheMeta();
+					if (!meta) return;
+					let items = meta.items || [];
+					if (items.some(it => String(it.id) === String(saved.id))) return;
+					items.push(saved);
+					this.saveCacheMeta({ version: meta.version, items });
+				});
 			},
 
 			onVideoLoaded(e) {

@@ -29,8 +29,9 @@
 			},
 			doIninit() {
 				var that = this;
-				// 将参数从 about 改为服务协议对应的 types（如果后台协议标识不同，可按实际后端字段修改）
-				var param = { types: "agreement" };
+				// 后台"文本分类"（sys_article）里"关于易缆通"这条记录的 models 是 "about"，
+				// 之前写成不存在的 "agreement" 会查不到任何数据，页面一直是空白
+				var param = { types: "about" };
 				uni.showLoading({ title: '加载中...' });
 				that.$api.article(param).then(ret => {
 					uni.hideLoading();

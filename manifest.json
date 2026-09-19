@@ -21,7 +21,8 @@
             "Payment" : {},
             "Geolocation" : {},
             "Camera" : {},
-            "Share" : {}
+            "Share" : {},
+            "VideoPlayer" : {}
         },
         /* 应用发布信息 */
         "distribute" : {

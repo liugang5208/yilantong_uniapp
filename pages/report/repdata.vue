@@ -181,19 +181,23 @@
 		<!-- 加大底部留白高度，确保滑动到最底部时抬头与人员档案内容不被底栏遮挡 -->
 		<view style="height: 320rpx;"></view>
 		
-		<!-- 底部固定双按钮操作栏 -->
+		<!-- 底部固定分享操作栏（恢复老版本四个入口） -->
 		<view class="fenxiang">
-			<view class="item metal-btn" @click="sharePdfDoc()">
-				<view class="icon-wrap">
-					<image class="svg-icon" src="@/static/icon/bj-pdf.png" mode="aspectFit" />
-				</view>
-				<text>发送PDF文档</text>
+			<view class="item metal-btn" @click="shareBg()">
+				<image class="icon-img" src="/static/imgs/biaoge.png" mode="aspectFit" />
+				<text>生成表格</text>
 			</view>
 			<view class="item metal-btn" @click="shareImage()">
-				<view class="icon-wrap">
-					<image class="svg-icon" src="@/static/icon/bj-tp.png" mode="aspectFit" />
-				</view>
-				<text>发送长图报价</text>
+				<image class="icon-img" src="/static/imgs/tupian.png" mode="aspectFit" />
+				<text>生成图片</text>
+			</view>
+			<view class="item metal-btn" @click="sharetoWechat()">
+				<image class="icon-img" src="/static/imgs/weixin.png" mode="aspectFit" />
+				<text>微信分享</text>
+			</view>
+			<view class="item metal-btn" @click="sharetoFriend()">
+				<image class="icon-img" src="/static/imgs/wxpyq.png" mode="aspectFit" />
+				<text>朋友圈</text>
 			</view>
 		</view>
 	</view>
@@ -209,8 +213,8 @@
 				total: '',
 				total_n: '',
 				ratioVal: 0,
-				infos: {}, 
-				pdf_url: '', 
+				infos: {},
+				excel_url: '',
 				img_url: "",
 				count: 0,
 				elcc_sn: '',
@@ -305,53 +309,58 @@
 				str = str.replace(/(产品型号|型号|产品规格|规格|电压等级|电压|产品名称|名称)[\s]*[:：\-]+/g, '');
 				return str.trim() || '暂无';
 			},
-			sharePdfDoc() {
-				if (!this.pdf_url) {
-					uni.showToast({ icon: "none", title: "PDF文档正在生成中，请稍后..." })
+			shareBg() {
+				if (!this.excel_url) {
+					uni.showToast({
+						icon: "none",
+						title: "正在获取链接请稍后"
+					})
 					return false
 				}
 				if (uni.getSystemInfoSync().platform == "android") {
 					const wechat_fileshare = uni.requireNativePlugin("wechat-fileshare");
 					if (wechat_fileshare) {
 						uni.downloadFile({
-							url: this.pdf_url,
-							header: { 'Content-Type': 'application/pdf; charset=UTF-8' },
+							url: this.excel_url,
+							header: {
+								'Content-Type': 'application/pdf; charset=UTF-8',
+							},
 							success: (res) => {
 								if (res.statusCode === 200) {
-									wechat_fileshare.send({
+									console.log('下载成功');
+								}
+								wechat_fileshare.send({
 										path: res.tempFilePath,
 										uni_app_id: '__UNI__94C6955',
-										filetype: 'pdf',
+										filetype: 'xls',
 										package_name: 'com.tencent.mm',
-										filename: (this.elcc_sn || '电缆报价单') + '.pdf'
-									}, e => {})
-								}
+										filename: this.elcc_sn
+									}, e => {}
+								)
 							}
 						})
 					} else {
-						this.doShare(this.pdf_url, 0, "WXSceneSession");
+						this.doShare(this.excel_url, 0, "WXSceneSession");
 					}
 				} else {
-					uni.downloadFile({
-						url: this.pdf_url,
-						success: (res) => {
-							if (res.statusCode === 200) {
-								uni.openDocument({
-									filePath: res.tempFilePath,
-									fileType: 'pdf',
-									success: () => { console.log('打开PDF成功'); }
-								});
-							}
-						}
-					});
+					this.doShare(this.excel_url, 0, "WXSceneSession");
 				}
 			},
 			shareImage() {
 				if (!this.img_url) {
-					uni.showToast({ icon: "none", title: "图片正在生成中，请稍后..." })
+					uni.showToast({
+						icon: "none",
+						title: "正在获取链接请稍后"
+					})
 					return false
 				}
-				this.doShare(this.img_url, 0, "WXSceneSession");
+				this.doShare(this.img_url, 0, "WXSceneSession", this.img_url);
+			},
+			sharetoWechat() {
+				this.doShare("http://app.elccc.cn/Inter/Wcins/repinfos/id/" + this.id, 0, "WXSceneSession", "/static/logo.png");
+			},
+			sharetoFriend() {
+				this.doShare("http://app.elccc.cn/Inter/Wcins/repinfos/id/" + this.id, 0, "WXSceneTimeline", "/static/logo.png");
 			},
 			doShare(href, type, scene, imageUrl) {
 				uni.share({
@@ -359,7 +368,7 @@
 					scene: scene,
 					type: type,
 					href: href,
-					title: this.elcc_sn || '电缆商务报价单',
+					title: this.elcc_sn,
 					imageUrl: imageUrl || this.img_url,
 					success: function(res) { console.log("分享成功"); },
 					fail: function(err) { console.log("分享失败", err); }
@@ -392,15 +401,21 @@
 				});
 			},
 			outUrl() {
+				uni.showLoading({
+					title: "生成中...",
+					mask: true
+				})
 				this.$api.outUrl({ id: this.id, uid: this.uid }).then(ret => {
 					if (ret && ret.data) {
-						this.pdf_url = ret.data.pdf_url || ret.data.excel_url || '';
+						this.excel_url = ret.data.excel_url || '';
 						this.img_url = ret.data.img_url || '';
 						this.elcc_sn = ret.data.elcc_sn || '报价单';
 					}
 				}).catch(e => {
 					console.error(e);
-				});
+				}).finally(e => {
+					uni.hideLoading()
+				})
 			}
 		}
 	}
@@ -821,16 +836,17 @@
 		padding: 0 32rpx;
 		box-sizing: border-box;
 
-		.item { 
+		.item {
 			flex: 1;
-			height: 96rpx;
-			display: flex; 
-			align-items: center; 
-			justify-content: center; 
+			height: 128rpx;
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			justify-content: center;
 			border-radius: 16rpx;
 			box-shadow: 0 4rpx 14rpx rgba(0, 0, 0, 0.08);
 
-			&:first-child { margin-right: 20rpx; }
+			&:not(:last-child) { margin-right: 16rpx; }
 
 			&.metal-btn {
 				background: linear-gradient(135deg, #F8FAFC 0%, #E2E8F0 100%);
@@ -838,20 +854,15 @@
 				text { color: #1E293B; }
 			}
 
-			.icon-wrap {
+			.icon-img {
 				width: 44rpx;
 				height: 44rpx;
-				display: flex;
-				align-items: center;
-				justify-content: center;
-				margin-right: 12rpx;
-
-				.svg-icon { width: 40rpx; height: 40rpx; }
+				margin-bottom: 6rpx;
 			}
 
-			text { 
-				font-size: 28rpx; 
-				font-weight: 600; 
+			text {
+				font-size: 22rpx;
+				font-weight: 600;
 				letter-spacing: 1rpx;
 			}
 		}

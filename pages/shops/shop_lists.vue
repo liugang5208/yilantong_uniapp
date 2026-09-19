@@ -1035,16 +1035,27 @@
 				let that = this;
 				uni.vibrateShort(); 
 				that.ticket_index = type;
+				// 含税价改成"除法"倒挤（价税分离）算法：不含税价 ÷ (1 - 税率/100)，
+				// 不再用"乘法"简单加价（1 + 税率/100）——后台配置的税率数值本身不用改，
+				// 只是这里换算成税前价的方式变了
 				if (type == 0) { that.ticket = 1; that.ticket_color = "red"; }
-				if (type == 1) { that.ticket = 1 + (that.blank_info ? that.blank_info.ticket_nor : 0) / 100; that.ticket_color = "purple"; }
-				if (type == 2) { that.ticket = 1 + (that.blank_info ? that.blank_info.ticket_person : 0) / 100; that.ticket_color = "blue"; }
+				if (type == 1) { that.ticket = 1 / (1 - (that.blank_info ? that.blank_info.ticket_nor : 0) / 100); that.ticket_color = "purple"; }
+				if (type == 2) { that.ticket = 1 / (1 - (that.blank_info ? that.blank_info.ticket_person : 0) / 100); that.ticket_color = "blue"; }
 				if (that.copen > 0 && that.cdata) {
 					that.cprice = that.transpoint(that.cdata.market * that.ticket * (that.ulevel ? that.ulevel.up : 1));
 				}
 				this.$forceUpdate()
 			},
 			changePage(id) { this.act_index = id; },
-			transpoint(value) { return parseFloat(value || 0).toFixed(2); },
+			transpoint(value) {
+				// 除法算出来的含税价容易落在 x.xx5 这种边界上，原生 toFixed() 受二进制浮点数
+				// 表示误差影响，遇到这种边界值时不一定按"四舍五入"正确进到下一位（比如经典的
+				// (1.005).toFixed(2) 会错误地得到 "1.00"）。这里加一个极小的修正量把边界值先
+				// 拉过界，再交给 toFixed 舍入，保证第三位小数始终按"满五进一"处理。
+				let num = parseFloat(value || 0);
+				let rounded = Math.round((num + (num >= 0 ? 1e-8 : -1e-8)) * 100) / 100;
+				return rounded.toFixed(2);
+			},
 			async doIninit() {
 				let that = this;
 				var params = {

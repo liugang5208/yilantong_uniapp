@@ -22,7 +22,10 @@
 			</view>
 			<view class="info-row">
 				<text class="label">注册地址：</text>
-				<text class="val lineover">{{ infos.prov_name || '四川' }}·{{ infos.city_name || '成都' }}·{{ infos.label_name || '金牛区' }}</text>
+				<!-- 改读 street（跟"编辑账号资料"页保存的是同一个字段），不再读 prov_name/city_name/label_name——
+				     那三个是另一套地区ID字段，编辑资料保存地址时并不会同步更新它们，会导致这里显示的地址跟
+				     用户刚保存的对不上。仍然兼容老数据：如果 street 还没填过、但历史的省市区字段有值，就退化拼接显示 -->
+				<text class="val lineover">{{ infos.street || [infos.prov_name, infos.city_name, infos.label_name].filter(Boolean).join('·') || '请完善所在地址' }}</text>
 			</view>
 			<view class="info-row">
 				<text class="label">注册日期：</text>

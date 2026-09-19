@@ -278,6 +278,9 @@ class Ht{
     	feedbackList(data){
     		return http.post("Users/feedbackList", data)
     	}
+    	feedbackDel(data){
+    		return http.post("Users/feedbackDel", data)
+    	}
 
     // --- 报价单：常用单位/备注模板 ---
     	reportQuickList(data){
