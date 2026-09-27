@@ -433,7 +433,14 @@
 				this.navi_slide = 1;
 			},
 			async update() {
-				let code = $publicConfig.version;
+				// 之前这里用的是 config/publicConfig.js 里手动维护的 $publicConfig.version（一个
+				// 跟 manifest.json 版本号对不上的写死整数），导致这个开屏自动检测基本上永远匹配不上
+				// 后台配置、形同虚设；改成跟"设置"页手动检测更新（setindex.vue::update()）一样，
+				// 读真实安装的 App 版本号 plus.runtime.version
+				let code = '5.0.0';
+				// #ifdef APP-PLUS
+				code = plus.runtime.version;
+				// #endif
 				let system = '';
 				// #ifdef APP-IOS
 				system = 2;
@@ -441,7 +448,7 @@
 				// #ifdef APP-ANDROID
 				system = 1;
 				// #endif
-				
+
 				this.$api.update_version({
 					version: code,
 					system: system,
@@ -453,7 +460,7 @@
 							updateContent: res.data.prompt,
 							downUrl: res.data.url,
 							version: res.data.version,
-							force: res.data.is_mandatory == 1 ? false : true,
+							force: res.data.is_mandatory == 2,
 							mainColor: 'FF5B78',
 						};
 						appUpdate(updateInfo);

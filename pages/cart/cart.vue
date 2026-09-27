@@ -520,7 +520,8 @@
 				return this.tabCounts[index] || 0;
 			},
 			transpoint(value) {
-				return Math.floor((value || 0) * 100) / 100;
+				// 原来这里用 Math.floor 永远向下取整，不是四舍五入；改成公用的四舍五入方法
+				return this.$util.roundMoney(value);
 			}
 		}
 	}

@@ -1035,12 +1035,12 @@
 				let that = this;
 				uni.vibrateShort(); 
 				that.ticket_index = type;
-				// 含税价改成"除法"倒挤（价税分离）算法：不含税价 ÷ (1 - 税率/100)，
-				// 不再用"乘法"简单加价（1 + 税率/100）——后台配置的税率数值本身不用改，
-				// 只是这里换算成税前价的方式变了
+				// 含税价 = 不含税价 ÷ 折算系数。后台 ticket_nor/ticket_person 现在存的
+				// 直接就是折算系数本身（= 1-税率，例如税率3%存0.97），不再是税率百分比，
+				// 不用再算 1-税率/100；未配置（0/空）时兜底不加价，避免除以0
 				if (type == 0) { that.ticket = 1; that.ticket_color = "red"; }
-				if (type == 1) { that.ticket = 1 / (1 - (that.blank_info ? that.blank_info.ticket_nor : 0) / 100); that.ticket_color = "purple"; }
-				if (type == 2) { that.ticket = 1 / (1 - (that.blank_info ? that.blank_info.ticket_person : 0) / 100); that.ticket_color = "blue"; }
+				if (type == 1) { let f = that.blank_info ? that.blank_info.ticket_nor : 0; that.ticket = f > 0 ? 1 / f : 1; that.ticket_color = "purple"; }
+				if (type == 2) { let f = that.blank_info ? that.blank_info.ticket_person : 0; that.ticket = f > 0 ? 1 / f : 1; that.ticket_color = "blue"; }
 				if (that.copen > 0 && that.cdata) {
 					that.cprice = that.transpoint(that.cdata.market * that.ticket * (that.ulevel ? that.ulevel.up : 1));
 				}

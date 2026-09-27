@@ -51,7 +51,7 @@
 			<!-- 底部协议勾选（强制单行展示，不换行） -->
 			<view class="agreement-box">
 				<u-checkbox v-model="regtool" active-color="#2563eb" size="32"></u-checkbox>
-				<text class="agreement-text">注册账号即代表您同意并认可<text class="link" @click.stop="viewTools()">《易缆通APP使用条款》</text></text>
+				<text class="agreement-text">我已阅读并同意《<text class="link" @click.stop="viewUserAgreement()">用户协议</text>》和《<text class="link" @click.stop="viewPrivacyPolicy()">隐私政策</text>》内容</text>
 			</view>
 
 			<!-- 注册主按钮 -->
@@ -96,9 +96,14 @@
 			}
 		},
 		methods: {
-			viewTools() {
+			viewUserAgreement() {
 				uni.navigateTo({
-					url: '/pages/login_md/regtool/regtool'
+					url: '/pages/my/setindex/setarticle?models=account&title=' + encodeURIComponent('用户协议')
+				})
+			},
+			viewPrivacyPolicy() {
+				uni.navigateTo({
+					url: '/pages/my/setindex/setarticle?models=about&title=' + encodeURIComponent('隐私政策')
 				})
 			},
 			toLogin() {
@@ -172,7 +177,7 @@
 				};
 				if (!that.regtool) {
 					uni.showToast({
-						title: "请阅读并同意注册协议",
+						title: "请先阅读并勾选同意《用户协议》和《隐私政策》",
 						icon: "none"
 					})
 					return false;
@@ -320,10 +325,7 @@
 			font-size: 24rpx;
 			color: #64748b;
 			margin-bottom: 36rpx;
-			white-space: nowrap;
-			overflow: hidden;
-			text-overflow: ellipsis;
-			
+
 			.agreement-text {
 				margin-left: 12rpx;
 				

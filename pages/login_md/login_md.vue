@@ -34,7 +34,7 @@
 			<!-- 底部协议勾选 -->
 			<view class="agreement-box">
 				<u-checkbox v-model="regtool" active-color="#2563eb" size="32"></u-checkbox>
-				<text class="agreement-text">我已阅读并同意 <text class="link" @click.stop="viewTools()">《服务与隐私政策》</text></text>
+				<text class="agreement-text">我已阅读并同意《<text class="link" @click.stop="viewUserAgreement()">用户协议</text>》和《<text class="link" @click.stop="viewPrivacyPolicy()">隐私政策</text>》内容</text>
 			</view>
 		</view>
 
@@ -65,9 +65,14 @@
 					url: '/pages/login_md/login'
 				})
 			},
-			viewTools() {
+			viewUserAgreement() {
 				uni.navigateTo({
-					url: '/pages/login_md/regtool/regtool'
+					url: '/pages/my/setindex/setarticle?models=account&title=' + encodeURIComponent('用户协议')
+				})
+			},
+			viewPrivacyPolicy() {
+				uni.navigateTo({
+					url: '/pages/my/setindex/setarticle?models=about&title=' + encodeURIComponent('隐私政策')
 				})
 			},
 			regirest() {
@@ -81,7 +86,7 @@
 				if (!that.regtool) {
 					uni.showToast({
 						icon: 'none',
-						title: "请先阅读并勾选同意服务协议"
+						title: "请先阅读并勾选同意《用户协议》和《隐私政策》"
 					})
 					return false;
 				}

@@ -166,6 +166,13 @@
             }
         },
         {
+            "path" : "pages/my/setindex/setarticle",
+            "style" : {
+                "navigationBarTitleText" : "详情",
+                "enablePullDownRefresh" : false
+            }
+        },
+        {
             "path" : "pages/my/heindex/heinfo",
             "style" : {
                 "navigationBarTitleText" : "帮助中心",

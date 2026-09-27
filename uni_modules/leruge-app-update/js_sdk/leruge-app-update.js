@@ -79,33 +79,69 @@ export default function(updateInfo) {
 		}
 	})
 	if (updateInfo.force) {
+		// 强制更新：跟非强制模式一样画两个按钮，左边"退出"、右边"立即更新"，
+		// 区别是左边按钮点了不是"关掉弹窗继续用旧版本"，而是直接退出 App（见下面点击事件）
 		popupViewContentList.push({
-			tag: 'rect', //绘制底边按钮
+			tag: 'rect',
+			id: 'quitBox',
 			rectStyles: {
-				radius: "6px",
-				color: updateInfo.mainColor
+				radius: "3px",
+				borderColor: "#f1f1f1",
+				borderWidth: "1px",
 			},
 			position: {
 				bottom: viewContentPadding + 'px',
 				left: viewContentPadding + "px",
-				width: viewContentWidth + "px",
-				height: "30px"
+				width: (viewContentWidth - viewContentPadding) / 2 + "px",
+				height: "30px",
+			}
+		})
+		popupViewContentList.push({
+			tag: 'rect',
+			id: 'confirmBox',
+			rectStyles: {
+				radius: "3px",
+				color: updateInfo.mainColor,
+			},
+			position: {
+				bottom: viewContentPadding + 'px',
+				left: ((viewContentWidth - viewContentPadding) / 2 + viewContentPadding * 2) + "px",
+				width: (viewContentWidth - viewContentPadding) / 2 + "px",
+				height: "30px",
+			}
+		})
+		popupViewContentList.push({
+			tag: 'font',
+			id: 'quitText',
+			text: "退出",
+			textStyles: {
+				size: '14px',
+				color: "#666",
+				lineSpacing: "0%",
+				whiteSpace: "normal"
+			},
+			position: {
+				bottom: viewContentPadding + 'px',
+				left: viewContentPadding + "px",
+				width: (viewContentWidth - viewContentPadding) / 2 + "px",
+				height: "30px",
 			}
 		})
 		popupViewContentList.push({
 			tag: 'font',
 			id: 'confirmText',
-			text: "立即升级",
+			text: "立即更新",
 			textStyles: {
 				size: '14px',
 				color: "#FFF",
 				lineSpacing: "0%",
+				whiteSpace: "normal"
 			},
 			position: {
 				bottom: viewContentPadding + 'px',
-				left: viewContentPadding + "px",
-				width: viewContentWidth + "px",
-				height: "30px"
+				left: ((viewContentWidth - viewContentPadding) / 2 + viewContentPadding * 2) + "px",
+				width: (viewContentWidth - viewContentPadding) / 2 + "px",
+				height: "30px",
 			}
 		})
 	} else {
@@ -188,15 +224,34 @@ export default function(updateInfo) {
 		height: popupViewHeight - 40 + "px",
 	})
 	popupView.draw(popupViewContentList)
+	// 强制更新期间拦截物理返回键：按返回键等同于选择不更新，直接退出 App，
+	// 不能绕过强制更新弹窗、回退到旧版本继续使用
+	let backListener = null
+	function quitApp() {
+		if (backListener) {
+			plus.key.removeEventListener('backbutton', backListener)
+			backListener = null
+		}
+		plus.runtime.quit()
+	}
 	popupView.addEventListener("click", e => {
 		let maxTop = popupViewHeight - viewContentPadding
 		let maxLeft = popupViewWidth - viewContentPadding
 		let buttonWidth = (viewContentWidth - viewContentPadding) / 2
 		if (e.clientY > maxTop - 30 && e.clientY < maxTop) {
 			if (updateInfo.force) {
-				if (e.clientX > viewContentPadding && e.clientX < maxLeft) {
+				// 左边"退出"：强制更新场景下选择不更新，直接退出 App
+				if (e.clientX > viewContentPadding && e.clientX < maxLeft - buttonWidth - viewContentPadding) {
+					quitApp()
+				}
+				// 右边"立即更新"
+				if (e.clientX > maxLeft - buttonWidth && e.clientX < maxLeft) {
 					maskLayer.hide()
 					popupView.hide()
+					if (backListener) {
+						plus.key.removeEventListener('backbutton', backListener)
+						backListener = null
+					}
 					let platform = updateInfo.platform || 'android'
 					let downUrl = updateInfo.downUrl || ''
 					download(updateInfo)
@@ -232,6 +287,12 @@ export default function(updateInfo) {
 	// 显示弹窗
 	maskLayer.show()
 	popupView.show()
+	if (updateInfo.force) {
+		backListener = function() {
+			quitApp()
+		}
+		plus.key.addEventListener('backbutton', backListener)
+	}
 }
 
 // 下载流程

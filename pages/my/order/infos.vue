@@ -676,14 +676,16 @@
 			getOnlinePayMoney(totalMoney) {
 				if (!totalMoney) return '0.00';
 				let val = parseFloat(totalMoney) * 0.5;
-				return (Math.floor(val * 100) / 100).toFixed(2);
+				// 原来这里用 Math.floor 永远向下取整，不是四舍五入；改成公用的四舍五入方法
+				return this.$util.formatMoney(val);
 			},
 			// 计算不含税混合支付（物流代收模式）的物流代收金额
 			getLogisticsCollectMoney(totalMoney) {
 				if (!totalMoney) return '0.00';
 				let onlineVal = parseFloat(totalMoney) * 0.5;
 				let collectVal = parseFloat(totalMoney) - onlineVal;
-				return (Math.floor(collectVal * 100) / 100).toFixed(2);
+				// 原来这里用 Math.floor 永远向下取整，不是四舍五入；改成公用的四舍五入方法
+				return this.$util.formatMoney(collectVal);
 			},
 			// 6. 获取订单状态名称
 			getOrderStatusName(status) {
@@ -820,7 +822,8 @@
 				// #endif
 			},
 			transpoint(value) {
-				return value ? (Math.floor(value * 100) / 100).toFixed(2) : '0.00';
+				// 原来这里用 Math.floor 永远向下取整，不是四舍五入；改成公用的四舍五入方法
+				return value ? this.$util.formatMoney(value) : '0.00';
 			},
 			doIninit() {
 				let that = this;

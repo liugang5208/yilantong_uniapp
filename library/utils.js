@@ -6,6 +6,28 @@ import $publicConfig from 'config/publicConfig.js'
 
 
 
+/**
+ * 金额四舍五入到分（返回 Number）
+ * 用 Math.round 而不是 Math.floor：Math.floor 永远向下取整，不是四舍五入；
+ * 加一个极小的 epsilon 再乘 100 取整，规避二进制浮点数表示误差导致
+ * 类似 (1.005*100) 实际算出 100.49999999999999、四舍五入本该进位却没进位的问题
+ * （经典的 JS `(1.005).toFixed(2) === "1.00"` 边界 bug，shop_lists.vue 的
+ * transpoint() 最早就是这么处理的，这里抽成公共方法，避免各页面各写一份、
+ * 写成不同的舍入方式）
+ */
+export function roundMoney(value) {
+	let num = parseFloat(value || 0);
+	if (isNaN(num)) return 0;
+	return Math.round((num + (num >= 0 ? 1e-8 : -1e-8)) * 100) / 100;
+}
+
+/**
+ * 金额四舍五入并格式化成两位小数字符串（如 "12.50"）
+ */
+export function formatMoney(value) {
+	return roundMoney(value).toFixed(2);
+}
+
 export function checkTel(tel) {
 	// console.log(this);
 	let reg = /^(13[0-9]|14[5|7]|15[0|1|2|3|5|6|7|8|9]|18[0|1|2|3|5|6|7|8|9])\d{8}$/

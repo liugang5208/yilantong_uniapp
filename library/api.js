@@ -129,6 +129,9 @@ class Ht{
 	artall(data){
 		return http.post("Index/artall.html",data)
 	}
+	articleMenu(data){
+		return http.post("Index/articleMenu.html",data)
+	}
 	helps(data){
 		return http.post("Index/helps.html",data)
 	}

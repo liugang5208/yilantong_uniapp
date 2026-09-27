@@ -1008,10 +1008,11 @@
 			},
 			popupChange(e) { if (!e.show) { this.hideMasks(); } },
 			transpay(value) {
-				if (this.paytype == 1) { value = value * 0.5; } 
-				return Math.floor(value * 100) / 100;
+				if (this.paytype == 1) { value = value * 0.5; }
+				// 原来这里用 Math.floor 永远向下取整，不是四舍五入；改成公用的四舍五入方法
+				return this.$util.roundMoney(value);
 			},
-			transpoint(value) { return Math.floor(value * 100) / 100; },
+			transpoint(value) { return this.$util.roundMoney(value); },
 			doIninit() {
 				let that = this;
 				var params = { uid: that.uid, type: 1 };

@@ -1,26 +1,28 @@
 <template>
 	<view class="settings-container">
 		
-		<!-- 第一组：常规服务与帮助 -->
-		<view class="menu-card">
-			<view class="menu-item" @click="gotoCustom()">
-				<text class="menu-text">客服中心</text>
+		<!-- 第一组：后台"系统文本"里勾选了"前端展示"的条目
+		     "客服中心"/"关于易缆通APP" 暂时屏蔽不展示，代码保留、注释掉方便以后恢复 -->
+		<!--
+		<view class="menu-item" @click="gotoCustom()">
+			<text class="menu-text">客服中心</text>
+			<image mode="widthFix" src="/static/icon/ic_right_gy.png" class="right-icon" />
+		</view>
+		<view class="menu-item last-item" @click="gotoAbout()">
+			<text class="menu-text">关于易缆通APP</text>
+			<view class="right-box">
+				<text class="sub-text">v{{ currentVersion }}</text>
 				<image mode="widthFix" src="/static/icon/ic_right_gy.png" class="right-icon" />
-			</view>
-			<!-- 新增：意见反馈 -->
-			<view class="menu-item" @click="gotoFeedback()">
-				<text class="menu-text">意见反馈</text>
-				<image mode="widthFix" src="/static/icon/ic_right_gy.png" class="right-icon" />
-			</view>
-			<view class="menu-item last-item" @click="gotoAbout()">
-				<text class="menu-text">关于易缆通APP</text>
-				<view class="right-box">
-					<text class="sub-text">v{{ currentVersion }}</text>
-					<image mode="widthFix" src="/static/icon/ic_right_gy.png" class="right-icon" />
-				</view>
 			</view>
 		</view>
-		
+		-->
+		<view class="menu-card" v-if="sysArticles.length > 0">
+			<view class="menu-item" :class="{'last-item': index === sysArticles.length - 1}" v-for="(item, index) in sysArticles" :key="item.id" @click="gotoArticle(item)">
+				<text class="menu-text">{{ item.name }}</text>
+				<image mode="widthFix" src="/static/icon/ic_right_gy.png" class="right-icon" />
+			</view>
+		</view>
+
 		<!-- 第二组：合规与系统工具 -->
 		<view class="menu-card">
 			<view class="menu-item" @click="ysfw('http://appfwxy.elccc.cn','服务协议')">
@@ -31,7 +33,12 @@
 				<text class="menu-text">隐私政策</text>
 				<image mode="widthFix" src="/static/icon/ic_right_gy.png" class="right-icon" />
 			</view>
-			<!-- 新增：清理缓存（带动态缓存大小计算） -->
+			<!-- 意见反馈 -->
+			<view class="menu-item" @click="gotoFeedback()">
+				<text class="menu-text">意见反馈</text>
+				<image mode="widthFix" src="/static/icon/ic_right_gy.png" class="right-icon" />
+			</view>
+			<!-- 清理缓存（带动态缓存大小计算） -->
 			<view class="menu-item" @click="clearCache">
 				<text class="menu-text">清除缓存</text>
 				<text class="sub-text">{{ cacheSize }}</text>
@@ -88,6 +95,7 @@
 				uid: uni.getStorageSync('loginTicket') ? uni.getStorageSync('loginTicket').id : '',
 				cacheSize: '0KB', // 缓存大小
 				currentVersion: '1.0.0', // 当前版本号
+				sysArticles: [], // 后台"系统文本"里勾选了"前端展示"的条目，显示在意见反馈前面
 				// 注销账号-验证码二次确认
 				showDelCodeModal: false,
 				delCode: '',
@@ -107,8 +115,23 @@
 		onLoad() {
 			this.getCacheSize();
 			this.getVersion();
+			this.getSysArticles();
 		},
 		methods: {
+			// 获取后台"系统文本"里勾选了"前端展示"的条目
+			getSysArticles() {
+				let that = this;
+				that.$api.articleMenu().then(ret => {
+					that.sysArticles = ret.data || [];
+				}).catch(err => {
+					console.log(err);
+				});
+			},
+			gotoArticle(item) {
+				uni.navigateTo({
+					url: '/pages/my/setindex/setarticle?models=' + item.models + '&title=' + encodeURIComponent(item.name)
+				});
+			},
 			// 获取当前App版本号
 			getVersion() {
 				// #ifdef APP-PLUS
@@ -293,7 +316,7 @@
 				let system = 1; // 默认
 				// #endif
 				
-				let code = '1.0.0';
+				let code = '5.0.0';
 				// #ifdef APP-PLUS
 				code = plus.runtime.version;
 				// #endif
@@ -311,7 +334,7 @@
 						updateContent: res.data.prompt,
 						downUrl: res.data.url,
 						version: res.data.version,
-						force: res.data.is_mandatory == 1 ? false : true,
+						force: res.data.is_mandatory == 2,
 						mainColor: 'FF5B78',
 					}
 					appUpdate(updateInfo)
