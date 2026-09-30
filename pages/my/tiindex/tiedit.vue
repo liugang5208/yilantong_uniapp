@@ -91,7 +91,7 @@
 
 		<!-- 底部悬浮渐变大按钮 -->
 		<view class="footer-btn-box">
-			<button class="save-btn" @click="apply()">保存并提交</button>
+			<button class="save-btn" :disabled="submitting" :loading="submitting" @click="apply()">保存并提交</button>
 		</view>
 	</view>
 </template>
@@ -112,6 +112,7 @@
 				tex_type: 1,
 				ticket_type: 2,
 				uid: '',
+				submitting: false,
 				tid: '',
 			};
 		},
@@ -152,6 +153,7 @@
 			      that.bank_id = ret.data.bank_id;
 			      that.bank_sn = ret.data.bank_sn;
 			    }).catch(err => {
+				that.submitting = false;
 			      console.log(err);
 			    });
 			},
@@ -163,6 +165,7 @@
 			},
 			apply() {
 				let that = this;
+				if (that.submitting) return;
 
 				// 逐项严格校验（开户行号 bank_sn 除外，因为是选填）
 				if (!that.tex_type) {
@@ -200,6 +203,7 @@
 
 			    var param = {
 			      uid: that.uid,
+			      ids: that.tid,
 			      tex_type: that.tex_type,
 			      ticket_type: that.ticket_type,
 			      comp_name: that.comp_name.trim(),
@@ -211,17 +215,20 @@
 			      bank_sn: that.bank_sn ? that.bank_sn.trim() : '',
 			    };
 			    
+				that.submitting = true;
 				uni.showLoading({
-					title: "保存中..."
+					title: "核验并保存中..."
 				})
-			    that.$api.ticket_addon(param).then(ret => {
+			    that.$api.ticket_edits(param).then(ret => {
 					uni.hideLoading();
 					uni.showToast({ title: '保存成功', icon: 'success', duration: 2000 });
 					setTimeout(() => {
 						uni.navigateBack();
 					}, 1500);
 			    }).catch(err => {
+				that.submitting = false;
 			      uni.hideLoading();
+			      uni.showModal({ title: '提示', content: (err && err.msg) || '保存失败，请重试', showCancel: false });
 			    });
 			},
 			back() {

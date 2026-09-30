@@ -89,7 +89,9 @@
 
 <script>
 	import appUpdate from '@/uni_modules/leruge-app-update/js_sdk/leruge-app-update.js'
+	import captchaMixin from '@/mixins/captcha.js'
 	export default {
+		mixins: [captchaMixin],
 		data() {
 			return {
 				uid: uni.getStorageSync('loginTicket') ? uni.getStorageSync('loginTicket').id : '',
@@ -260,12 +262,20 @@
 			closeDelCodeModal() {
 				this.showDelCodeModal = false;
 			},
-			sendDelCode() {
+			async sendDelCode() {
 				let that = this;
 				if (that.delCodeTim > 0) return;
 				if (!that.userPhone) return;
+				let captchaVerifyParam = '';
+				try {
+					captchaVerifyParam = await that.requestCaptchaVerify();
+				} catch (e) {
+					if (e && e.cancelled) return;
+					uni.showToast({ title: e && e.message || "验证码加载失败，请重试", icon: 'none' });
+					return;
+				}
 				uni.showLoading({ title: '获取中...' });
-				that.$api.getSmsCode({ phone: that.userPhone }).then(() => {
+				that.$api.getSmsCode({ phone: that.userPhone, captchaVerifyParam: captchaVerifyParam }).then(() => {
 					uni.hideLoading();
 					that.delCodeTim = 120;
 					let timer = setInterval(() => {

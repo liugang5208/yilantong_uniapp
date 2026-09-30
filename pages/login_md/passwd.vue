@@ -48,7 +48,9 @@
 </template>
 
 <script>
+	import captchaMixin from '@/mixins/captcha.js'
 	export default {
+		mixins: [captchaMixin],
 		data() {
 			return {
 				phone: "",
@@ -128,7 +130,7 @@
 				});
 			},
 
-			getCodes() {
+			async getCodes() {
 				var that = this;
 				if (!that.phone) {
 					uni.showToast({
@@ -140,8 +142,17 @@
 				if (that.code_tim > 0) {
 					return;
 				}
+				let captchaVerifyParam = '';
+				try {
+					captchaVerifyParam = await that.requestCaptchaVerify();
+				} catch (e) {
+					if (e && e.cancelled) return;
+					uni.showToast({ title: e && e.message || "验证码加载失败，请重试", icon: 'none' })
+					return;
+				}
 				var param = {
 					phone: that.phone,
+					captchaVerifyParam: captchaVerifyParam,
 				};
 				uni.showLoading({
 					title: "获取中..."

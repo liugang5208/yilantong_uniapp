@@ -136,6 +136,7 @@
 					uni.$emit("adadds");
 				}).catch(err => {
 					uni.hideLoading();
+					uni.showToast({ title: err && err.msg || '添加失败，请重试', icon: 'none' });
 				});
 			},
 			back() {

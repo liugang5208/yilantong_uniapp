@@ -65,9 +65,10 @@
 			if (typeof plus !== 'undefined' && plus.navigator) {
 				plus.navigator.closeSplashscreen();
 			}
-			// App 端是原生播放器，不受浏览器"自动播放必须静音"的策略限制，默认开声音；
+			// App 端是原生播放器，不受浏览器"自动播放必须静音"的策略限制，声音默认状态
+			// 改为读后台"广告管理"页配置的开关（见 loadDefaultMuted()），不再写死；
 			// H5 端维持默认静音（浏览器大概率会强制静音/拦截播放，改了也没用）
-			this.isMuted = false;
+			this.isMuted = this.loadDefaultMuted();
 			// #endif
 			this.init()
 		},
@@ -155,6 +156,25 @@
 				}
 			},
 
+			// 开屏视频默认声音开关（后台"广告管理"页配置），缓存到本地——因为播放那一刻
+			// 用的是本地缓存池选片，不一定发起了网络请求，得用上一次同步下来的配置值
+			loadDefaultMuted() {
+				try {
+					let v = uni.getStorageSync('ads_default_muted_v1');
+					return typeof v === 'boolean' ? v : true; // 没缓存过配置时保守地默认静音
+				} catch (e) {
+					return true;
+				}
+			},
+
+			saveDefaultMuted(muted) {
+				try {
+					uni.setStorageSync('ads_default_muted_v1', muted);
+				} catch (e) {
+					// 忽略
+				}
+			},
+
 			// 把选中的素材类型/地址应用到页面上，触发对应的渲染与就绪兜底逻辑，
 			// 复用于「本地缓存池选片」和「H5 直接播远程地址」两种场景
 			applyPick(type, url) {
@@ -186,6 +206,12 @@
 					let freshList = (res.data && res.data.list) || [];
 					let freshIds = freshList.map(a => String(a.id));
 					let oldItems = (cacheMeta && cacheMeta.items) || [];
+
+					// 顺带把最新的"开屏视频默认声音"配置缓存下来，供下一次启动播放本地
+					// 缓存素材时使用（那次不一定会发起网络请求，用不了这次拿到的最新值）
+					if (res.data && typeof res.data.defaultMuted === 'boolean') {
+						this.saveDefaultMuted(res.data.defaultMuted);
+					}
 
 					this.cleanupCache(oldItems, freshIds);
 

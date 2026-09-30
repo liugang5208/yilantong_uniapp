@@ -192,6 +192,9 @@ class Ht{
 	ticket_addon(data){
 		return http.post("Users/ticket_addon.html",data)
 	}
+	ticket_edits(data){
+		return http.post("Users/ticket_edits.html",data)
+	}
 	ticket_dels(data){
 		return http.post("Users/ticket_dels.html",data)
 	}

@@ -54,11 +54,15 @@
 		</view>
 
 		<!-- 省市区选择弹窗 -->
-		<u-picker mode="region" @confirm="confirmRegion" v-model="showPicker" :params="params"></u-picker>
+		<u-picker mode="region" @confirm="confirmRegion" v-model="showPicker" :params="params" :default-region="defaultRegion"></u-picker>
 	</view>
 </template>
 
 <script>
+	import provinces from 'uview-ui/libs/util/province.js';
+	import cities from 'uview-ui/libs/util/city.js';
+	import areas from 'uview-ui/libs/util/area.js';
+
 	export default {
 		data() {
 			return {
@@ -78,6 +82,28 @@
 				label: "",
 				street: "",
 				addr_id: '',
+			}
+		},
+		computed: {
+			defaultRegion() {
+				// 接口返回简称，选择器需要自身数据中的完整名称。
+				const findIndex = (items, name) => {
+					if (!name) return -1;
+					const exact = items.findIndex(item => item.label === name);
+					if (exact >= 0) return exact;
+					const matches = items.map((item, index) => item.label.indexOf(name) === 0 ? index : -1).filter(index => index >= 0);
+					return matches.length === 1 ? matches[0] : -1;
+				};
+				const province = findIndex(provinces, this.prov);
+				if (province < 0) return [];
+				let city = findIndex(cities[province], this.city);
+				if (city < 0 && ['11', '12', '31', '50'].includes(provinces[province].value)) {
+					city = areas[province].findIndex(items => findIndex(items, this.label) >= 0);
+				}
+				if (city < 0) return [];
+				const area = findIndex(areas[province][city], this.label);
+				if (area < 0) return [];
+				return [provinces[province].label, cities[province][city].label, areas[province][city][area].label];
 			}
 		},
 		onLoad(option) {
@@ -133,6 +159,7 @@
 					uni.$emit("adedit")
 				}).catch(err => {
 					uni.hideLoading()
+					uni.showToast({ title: err && err.msg || '保存失败，请重试', icon: 'none' });
 				});
 			},
 			back() {
@@ -250,4 +277,3 @@
 		}
 	}
 </style>
-```[cite: 4]

@@ -99,8 +99,10 @@
 				});
 			} else {
 				this.uid = userInfo.id
-				this.doIninit()
 			}
+		},
+		onShow() {
+			if (this.uid) this.doIninit();
 		},
 		methods: {
 			gotoEdit(id) {

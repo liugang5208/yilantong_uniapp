@@ -25,7 +25,7 @@
 				</view>
 
 				<view class="input-row">
-					<u-field v-model="nickname" label="用户姓名" placeholder="请输入您的名称" :border-bottom="false"></u-field>
+					<u-field v-model="nickname" label="用户姓名" placeholder="请输入手机号实名登记的真实姓名" :border-bottom="false"></u-field>
 				</view>
 				
 				<view class="input-row">
@@ -69,7 +69,9 @@
 </template>
 
 <script>
+	import captchaMixin from '@/mixins/captcha.js'
 	export default {
+		mixins: [captchaMixin],
 		data() {
 			return {
 				regtool: false,
@@ -125,7 +127,7 @@
 			/**
 			 * 获取验证码（接口保持原样）
 			 */
-			getCodes() {
+			async getCodes() {
 				var that = this;
 				if (that.phone.length < 1) {
 					uni.showToast({
@@ -137,8 +139,17 @@
 				if (that.code_tim > 0) {
 					return;
 				}
+				let captchaVerifyParam = '';
+				try {
+					captchaVerifyParam = await that.requestCaptchaVerify();
+				} catch (e) {
+					if (e && e.cancelled) return;
+					uni.showToast({ title: e && e.message || "验证码加载失败，请重试", icon: 'none' })
+					return;
+				}
 				var param = {
 					phone: that.phone,
+					captchaVerifyParam: captchaVerifyParam,
 				};
 				uni.showLoading({
 					title: "获取中..."
@@ -190,7 +201,14 @@
 						if (res.confirm) {
 							that.$api.reg(param).then(ret => {
 								uni.navigateBack()
-							}).catch(err => {});
+							}).catch(err => {
+								// 原来这里是空的，注册失败（包括手机号+姓名实名校验不一致）
+								// 不会有任何提示，用户只会看到"点了没反应"
+								uni.showToast({
+									title: (err && err.msg) || "注册失败，请重试",
+									icon: 'none'
+								})
+							});
 						} else if (res.cancel) {
 							console.log('用户点击取消');
 						}

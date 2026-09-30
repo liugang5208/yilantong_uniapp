@@ -91,7 +91,7 @@
 
 		<!-- 底部悬浮渐变大按钮 -->
 		<view class="footer-btn-box">
-			<button class="save-btn" @click="apply()">确认无误，提交上传</button>
+			<button class="save-btn" :disabled="submitting" :loading="submitting" @click="apply()">确认无误，提交上传</button>
 		</view>
 	</view>
 </template>
@@ -112,6 +112,7 @@
 				tex_type: 1,      // 默认选中第一个
 				ticket_type: 2,   // 默认选中第二个（专用发票）
 				uid: '',
+				submitting: false,
 			};
 		},
 		onLoad() {
@@ -142,6 +143,7 @@
 			},
 			apply() {
 				let that = this;
+				if (that.submitting) return;
 
 				// 逐项严格校验（开户行号 bank_sn 除外，因为是选填）
 				if (!that.tex_type) {
@@ -190,8 +192,9 @@
 			      bank_sn: that.bank_sn ? that.bank_sn.trim() : '',
 			    };
 			    
+				that.submitting = true;
 				uni.showLoading({
-					title: "添加中..."
+					title: "核验并保存中..."
 				})
 			    that.$api.ticket_addon(param).then(ret => {
 					uni.hideLoading();
@@ -200,7 +203,14 @@
 						uni.navigateBack();
 					}, 1500);
 			    }).catch(err => {
+				that.submitting = false;
 			      uni.hideLoading();
+			      // 原来这里是空的，企业二要素核验不通过时的提示文案（多行）不会展示给用户
+			      uni.showModal({
+			        title: '提示',
+			        content: (err && err.msg) || '添加失败，请重试',
+			        showCancel: false
+			      });
 			    });
 			},
 			back() {
