@@ -1,5 +1,8 @@
 <template>
 	<view class="login-container">
+        <!-- #ifdef APP-PLUS -->
+        <aliyun-captcha ref="aliyunCaptcha" />
+        <!-- #endif -->
 		<!-- 顶部纯净 Banner 区域 -->
 		<view class="banner-box">
 			<image class="banner-img" mode="widthFix" src="/static/imgs/login_banner.png" />
@@ -88,6 +91,7 @@
 				passwd: "",
 				vipass: "",
 				code_tim: 0,
+				sendingCode: false,
 				code_tip: "获取验证码",
 				params: {
 					province: true,
@@ -125,41 +129,40 @@
 				console.log(e);
 			},
 			/**
-			 * 获取验证码（接口保持原样）
+			 * 注册短信：先人机验证，再由服务端核验姓名手机号后发送
 			 */
 			async getCodes() {
-				var that = this;
-				if (that.phone.length < 1) {
-					uni.showToast({
-						title: "请输入手机号码",
-						icon: 'none'
-					})
-					return false;
-				}
-				if (that.code_tim > 0) {
+				if (this.code_tim > 0 || this.sendingCode) return;
+				const nickname = this.nickname.trim();
+				const phone = this.phone.trim();
+				if (!nickname) {
+					uni.showToast({ title: '请填写真实姓名', icon: 'none' });
 					return;
 				}
-				let captchaVerifyParam = '';
+				if (!/^1[3-9][0-9]{9}$/.test(phone)) {
+					uni.showToast({ title: '请输入正确的手机号码', icon: 'none' });
+					return;
+				}
+				this.sendingCode = true;
+				let loading = false;
 				try {
-					captchaVerifyParam = await that.requestCaptchaVerify();
-				} catch (e) {
-					if (e && e.cancelled) return;
-					uni.showToast({ title: e && e.message || "验证码加载失败，请重试", icon: 'none' })
-					return;
+					const captchaVerifyParam = await this.requestCaptchaVerify();
+					if (nickname !== this.nickname.trim() || phone !== this.phone.trim()) {
+						uni.showToast({ title: '姓名或手机号已变更，请重新获取', icon: 'none' });
+						return;
+					}
+					uni.showLoading({ title: '核验并发送中...', mask: true });
+					loading = true;
+					await this.$api.getRegisterSmsCode({ nickname, phone, captchaVerifyParam });
+					this.getCodesVal();
+				} catch (error) {
+					if (!(error && error.cancelled)) {
+						uni.showToast({ title: error && (error.msg || error.message) || '获取验证码失败，请重试', icon: 'none', duration: 3000 });
+					}
+				} finally {
+					if (loading) uni.hideLoading();
+					this.sendingCode = false;
 				}
-				var param = {
-					phone: that.phone,
-					captchaVerifyParam: captchaVerifyParam,
-				};
-				uni.showLoading({
-					title: "获取中..."
-				})
-				that.$api.getSmsCode(param).then(ret => {
-					uni.hideLoading()
-					return that.getCodesVal();
-				}).catch(err => {
-					uni.hideLoading()
-				});
 			},
 			getCodesVal() {
 				var that = this;

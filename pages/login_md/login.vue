@@ -1,5 +1,8 @@
 <template>
 	<view class="login-container">
+        <!-- #ifdef APP-PLUS -->
+        <aliyun-captcha ref="aliyunCaptcha" />
+        <!-- #endif -->
 		<!-- 顶部纯净 Banner 区域 -->
 		<view class="banner-box">
 			<image class="banner-img" mode="widthFix" src="/static/imgs/login_banner.png" />

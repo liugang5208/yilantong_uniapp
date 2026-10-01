@@ -1,5 +1,8 @@
 <template>
 	<view class="settings-container">
+        <!-- #ifdef APP-PLUS -->
+        <aliyun-captcha ref="aliyunCaptcha" />
+        <!-- #endif -->
 		
 		<!-- 第一组：后台"系统文本"里勾选了"前端展示"的条目
 		     "客服中心"/"关于易缆通APP" 暂时屏蔽不展示，代码保留、注释掉方便以后恢复 -->

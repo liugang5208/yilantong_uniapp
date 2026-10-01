@@ -1,5 +1,8 @@
 <template>
 	<view class="login-container">
+        <!-- #ifdef APP-PLUS -->
+        <aliyun-captcha ref="aliyunCaptcha" />
+        <!-- #endif -->
 		<!-- 顶部导航栏保持不变 -->
 		<u-navbar :is-back="false" title="">
 			<view class="d_a_sb " style="width: 750rpx;">

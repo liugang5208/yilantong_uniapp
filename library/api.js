@@ -202,6 +202,9 @@ class Ht{
 		return http.post("Users/ticket_info.html",data)
 	}
 	
+	getRegisterSmsCode(data){
+		return http.post("Index/getRegisterSmsCode.html",data)
+	}
 	getSmsCode(data){
 		return http.post("Index/getSmsCode.html",data)
 	}
